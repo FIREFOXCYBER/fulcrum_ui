@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Lottie from 'react-lottie'
+import stakingProvider from '../services/StakingProvider'
 import { TxLoaderStep } from './TxLoaderStep'
-import { StakingProvider } from '../services/StakingProvider'
 
 import animationData from '../config/animation-tx.json'
 
@@ -38,9 +38,7 @@ export class AnimationTx extends Component<IAnimationTxProps, IAnimationTxState>
         <div className="animation-tx">
           {this.state.txHash ? (
             <a
-              href={`${StakingProvider.Instance.web3ProviderSettings!.etherscanURL}tx/${
-                this.state.txHash
-              }`}
+              href={`${stakingProvider.web3ProviderSettings.etherscanURL}tx/${this.state.txHash}`}
               target="_blank"
               rel="noopener noreferrer">
               <p className="animation-title">

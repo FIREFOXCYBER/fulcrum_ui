@@ -1,29 +1,27 @@
-import React, { Component } from 'react'
-import { ReactComponent as BzrxIcon } from '../assets/images/token-bzrx.svg'
-import { ReactComponent as VBzrxIcon } from '../assets/images/token-vbzrx.svg'
-import { ReactComponent as BPTIcon } from '../assets/images/token-bpt.svg'
-import { StakingProvider } from '../services/StakingProvider'
-import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
-import { StakingRequest } from '../domain/StakingRequest'
-import { RequestTask } from '../domain/RequestTask'
-import { RequestStatus } from '../domain/RequestStatus'
+import Box from '3box'
 import { BigNumber } from '@0x/utils'
-import { Asset } from '../domain/Asset'
-import { AddToBalance } from './AddToBalance'
+import React, { Component } from 'react'
 import Modal from 'react-modal'
-import { FindRepresentative } from './FindRepresentative'
-import { AnimationTx } from './AnimationTx'
-import { IRep } from '../domain/IRep'
-
 import Representative1 from '../assets/images/representative1.png'
 import Representative2 from '../assets/images/representative2.png'
 import Representative3 from '../assets/images/representative3.png'
+import { ReactComponent as BPTIcon } from '../assets/images/token-bpt.svg'
+import { ReactComponent as BzrxIcon } from '../assets/images/token-bzrx.svg'
+import { ReactComponent as VBzrxIcon } from '../assets/images/token-vbzrx.svg'
+import { Asset } from '../domain/Asset'
 import { BecomeRepresentativeRequest } from '../domain/BecomeRepresentativeRequest'
-import { ClaimRequest } from '../domain/ClaimRequest'
 import { ClaimReabteRewardsRequest } from '../domain/ClaimReabteRewardsRequest'
+import { ClaimRequest } from '../domain/ClaimRequest'
 import { ConvertRequest } from '../domain/ConvertRequest'
-
-const Box = require('3box')
+import { IRep } from '../domain/IRep'
+import { RequestStatus } from '../domain/RequestStatus'
+import { RequestTask } from '../domain/RequestTask'
+import { StakingRequest } from '../domain/StakingRequest'
+import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
+import stakingProvider from '../services/StakingProvider'
+import { AddToBalance } from './AddToBalance'
+import { AnimationTx } from './AnimationTx'
+import { FindRepresentative } from './FindRepresentative'
 
 interface IFormState {
   bzrxV1Balance: BigNumber
@@ -75,19 +73,16 @@ export class Form extends Component<{}, IFormState> {
     }
 
     this._isMounted = false
-    StakingProvider.Instance.eventEmitter.on(
+    stakingProvider.eventEmitter.on(
       StakingProviderEvents.ProviderAvailable,
       this.onProviderAvailable
     )
-    StakingProvider.Instance.eventEmitter.on(
-      StakingProviderEvents.ProviderChanged,
-      this.onProviderChanged
-    )
-    StakingProvider.Instance.eventEmitter.on(
+    stakingProvider.eventEmitter.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.eventEmitter.on(
       StakingProviderEvents.AskToOpenProgressDlg,
       this.onAskToOpenProgressDlg
     )
-    StakingProvider.Instance.eventEmitter.on(
+    stakingProvider.eventEmitter.on(
       StakingProviderEvents.AskToCloseProgressDlg,
       this.onAskToCloseProgressDlg
     )
@@ -99,32 +94,26 @@ export class Form extends Component<{}, IFormState> {
 
   private async derivedUpdate() {
     let selectedRepAddress = ''
-    this.isAlreadyRepresentative = await StakingProvider.Instance.checkIsRep()
+    this.isAlreadyRepresentative = await stakingProvider.checkIsRep()
 
-    const bzrxV1Balance = (
-      await StakingProvider.Instance.getAssetTokenBalanceOfUser(Asset.BZRXv1)
-    ).div(10 ** 18)
-    const bzrxBalance = (await StakingProvider.Instance.stakeableByAsset(Asset.BZRX)).div(10 ** 18)
-    const vBzrxBalance = (await StakingProvider.Instance.stakeableByAsset(Asset.vBZRX)).div(
+    const bzrxV1Balance = (await stakingProvider.getAssetTokenBalanceOfUser(Asset.BZRXv1)).div(
       10 ** 18
     )
-    //TODO: remove networkName
+    const bzrxBalance = (await stakingProvider.stakeableByAsset(Asset.BZRX)).div(10 ** 18)
+    const vBzrxBalance = (await stakingProvider.stakeableByAsset(Asset.vBZRX)).div(10 ** 18)
+    // TODO: remove networkName
     const bptBalance =
       networkName === 'kovan'
-        ? (await StakingProvider.Instance.stakeableByAsset(Asset.BPT)).div(10 ** 6)
-        : (await StakingProvider.Instance.stakeableByAsset(Asset.BPT)).div(10 ** 18)
+        ? (await stakingProvider.stakeableByAsset(Asset.BPT)).div(10 ** 6)
+        : (await stakingProvider.stakeableByAsset(Asset.BPT)).div(10 ** 18)
 
-    const bzrxStakingBalance = (await StakingProvider.Instance.balanceOfByAsset(Asset.BZRX)).div(
-      10 ** 18
-    )
-    const vBzrxStakingBalance = (await StakingProvider.Instance.balanceOfByAsset(Asset.vBZRX)).div(
-      10 ** 18
-    )
-    //TODO: remove networkName
+    const bzrxStakingBalance = (await stakingProvider.balanceOfByAsset(Asset.BZRX)).div(10 ** 18)
+    const vBzrxStakingBalance = (await stakingProvider.balanceOfByAsset(Asset.vBZRX)).div(10 ** 18)
+    // TODO: remove networkName
     const bptStakingBalance =
       networkName === 'kovan'
-        ? (await StakingProvider.Instance.balanceOfByAsset(Asset.BPT)).div(10 ** 6)
-        : (await StakingProvider.Instance.balanceOfByAsset(Asset.BPT)).div(10 ** 18)
+        ? (await stakingProvider.balanceOfByAsset(Asset.BPT)).div(10 ** 6)
+        : (await stakingProvider.balanceOfByAsset(Asset.BPT)).div(10 ** 18)
     this._isMounted &&
       this.setState({
         ...this.state,
@@ -137,15 +126,12 @@ export class Form extends Component<{}, IFormState> {
         bptStakingBalance
       })
 
-    const repsList = ((await StakingProvider.Instance.getRepresentatives()) as IRep[]).map(
-      (rep, i) => {
-        rep.index = i
-        rep.imageSrc =
-          i % 3 === 0 ? Representative1 : i % 2 === 0 ? Representative2 : Representative3
-        rep.name = this.getShortHash(rep.wallet, 4)
-        return rep
-      }
-    )
+    const repsList = ((await stakingProvider.getRepresentatives()) as IRep[]).map((rep, i) => {
+      rep.index = i
+      rep.imageSrc = i % 3 === 0 ? Representative1 : i % 2 === 0 ? Representative2 : Representative3
+      rep.name = this.getShortHash(rep.wallet, 4)
+      return rep
+    })
 
     let topRepsList = repsList.sort((a: any, b: any) => b.BZRX.minus(a.BZRX).toNumber()).slice(0, 3)
     this._isMounted &&
@@ -155,8 +141,8 @@ export class Form extends Component<{}, IFormState> {
         topRepsList
       })
 
-    const userEarnings = await StakingProvider.Instance.getUserEarnings()
-    const rebateRewards = (await StakingProvider.Instance.getRebateRewards()).div(10 ** 18)
+    const userEarnings = await stakingProvider.getUserEarnings()
+    const rebateRewards = (await stakingProvider.getRebateRewards()).div(10 ** 18)
     this._isMounted &&
       this.setState({
         ...this.state,
@@ -171,7 +157,7 @@ export class Form extends Component<{}, IFormState> {
         topRepsList
       })
 
-    const delegateAddress = await StakingProvider.Instance.getDelegateAddress()
+    const delegateAddress = await stakingProvider.getDelegateAddress()
     const delegate = topRepsList.find(
       (e) => e.wallet.toLowerCase() === delegateAddress.toLowerCase()
     )
@@ -197,55 +183,52 @@ export class Form extends Component<{}, IFormState> {
 
   public componentDidMount(): void {
     this._isMounted = true
-    this.derivedUpdate()
+    this.derivedUpdate().catch((err) => console.error(err))
   }
 
   public componentWillUnmount(): void {
     this._isMounted = false
 
-    StakingProvider.Instance.eventEmitter.off(
+    stakingProvider.eventEmitter.off(
       StakingProviderEvents.ProviderAvailable,
       this.onProviderAvailable
     )
-    StakingProvider.Instance.eventEmitter.off(
-      StakingProviderEvents.ProviderChanged,
-      this.onProviderChanged
-    )
-    StakingProvider.Instance.eventEmitter.off(
+    stakingProvider.eventEmitter.off(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.eventEmitter.off(
       StakingProviderEvents.AskToOpenProgressDlg,
       this.onAskToOpenProgressDlg
     )
-    StakingProvider.Instance.eventEmitter.off(
+    stakingProvider.eventEmitter.off(
       StakingProviderEvents.AskToCloseProgressDlg,
       this.onAskToCloseProgressDlg
     )
   }
 
   public onBzrxV1ToV2ConvertClick = async () => {
-    await StakingProvider.Instance.onRequestConfirmed(
+    await stakingProvider.onRequestConfirmed(
       new ConvertRequest(this.state.bzrxV1Balance.times(10 ** 18))
     )
-    // await StakingProvider.Instance.convertBzrxV1ToV2(this.state.bzrxV1Balance.times(10 ** 18));
+    // await StakingProvider.convertBzrxV1ToV2(this.state.bzrxV1Balance.times(10 ** 18));
     // await this.derivedUpdate();
   }
 
   // public onOptinClick = async () => {
-  //   await StakingProvider.Instance.doOptin();
+  //   await StakingProvider.doOptin();
   //   await this.derivedUpdate();
   // }
 
   public onClaimClick = async () => {
-    await StakingProvider.Instance.onRequestConfirmed(new ClaimRequest())
+    await stakingProvider.onRequestConfirmed(new ClaimRequest())
   }
 
   public onClaimRebateRewardsClick = async () => {
-    // await StakingProvider.Instance.doClaimReabteRewards();
+    // await StakingProvider.doClaimReabteRewards();
     // await this.derivedUpdate();
-    await StakingProvider.Instance.onRequestConfirmed(new ClaimReabteRewardsRequest())
+    await stakingProvider.onRequestConfirmed(new ClaimReabteRewardsRequest())
   }
 
   public onBecomeRepresentativeClick = async () => {
-    await StakingProvider.Instance.onRequestConfirmed(new BecomeRepresentativeRequest())
+    await stakingProvider.onRequestConfirmed(new BecomeRepresentativeRequest())
   }
 
   public onStakeClick = async (bzrx: BigNumber, vbzrx: BigNumber, bpt: BigNumber) => {
@@ -257,17 +240,17 @@ export class Form extends Component<{}, IFormState> {
       ? this.state.vBzrxBalance.times(10 ** 18)
       : vbzrx
     let bptAmount
-    if (networkName === 'kovan')
+    if (networkName === 'kovan') {
       bptAmount = bpt.gt(this.state.bptBalance.times(10 ** 6))
         ? this.state.bptBalance.times(10 ** 6)
         : bpt
-    else {
+    } else {
       bptAmount = bpt.gt(this.state.bptBalance.times(10 ** 18))
         ? this.state.bptBalance.times(10 ** 18)
         : bpt
     }
 
-    await StakingProvider.Instance.onRequestConfirmed(
+    await stakingProvider.onRequestConfirmed(
       new StakingRequest(bzrxAmount, vbzrxAmount, bptAmount, this.state.selectedRepAddress)
     )
   }
@@ -308,15 +291,17 @@ export class Form extends Component<{}, IFormState> {
   }
 
   private onRequestClose = async () => {
-    ;(await this._isMounted) &&
+    if (this._isMounted) {
       this.setState({
         ...this.state,
         isFindRepresentativeOpen: false
       })
+    }
   }
 
   private getRepInfo = async (item: IRep, index: number): Promise<IRep> => {
-    let name, imageSrc
+    let name
+    let imageSrc
     const profile = await Box.getProfile(item.wallet)
     name = profile.name ? profile.name : item.name
     imageSrc = profile.image
@@ -380,15 +365,11 @@ export class Form extends Component<{}, IFormState> {
   }
 
   public render() {
-    const etherscanURL = StakingProvider.Instance.web3ProviderSettings
-      ? StakingProvider.Instance.web3ProviderSettings.etherscanURL
+    const etherscanURL = stakingProvider.web3ProviderSettings
+      ? stakingProvider.web3ProviderSettings.etherscanURL
       : ''
-    //console.log(this.state.topRepsList);
+
     const topRepsLi = this.state.topRepsList.map((e) => {
-      if (e === undefined) {
-        return false
-      }
-      //console.log(e);
       return (
         <li
           key={e.wallet}

@@ -1,12 +1,12 @@
-import React from 'react'
-import { ProviderType } from '../domain/ProviderType'
-import { ProviderMenuListItem } from './ProviderMenuListItem'
-import { useWeb3React } from '@web3-react/core'
-import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
-import { StakingProvider } from '../services/StakingProvider'
-import { injected } from '../domain/WalletConnectors'
 import { AbstractConnector } from '@web3-react/abstract-connector'
+import { useWeb3React } from '@web3-react/core'
+import React from 'react'
 import { ReactComponent as CloseIcon } from '../assets/images/ic__close.svg'
+import { ProviderType } from '../domain/ProviderType'
+import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
+import { injected } from '../domain/WalletConnectors'
+import stakingProvider from '../services/StakingProvider'
+import { ProviderMenuListItem } from './ProviderMenuListItem'
 
 export interface IProviderMenuProps {
   providerTypes: ProviderType[]
@@ -21,7 +21,7 @@ export const ProviderMenu = (props: IProviderMenuProps) => {
   const { connector, account, activate, deactivate, active, error } = context
 
   // handle logic to recognize the connector currently being activated
-  //@ts-ignore
+  // @ts-ignore
   const [activatingConnector, setActivatingConnector] = React.useState()
   React.useEffect(() => {
     if (activatingConnector && activatingConnector === connector) {
@@ -37,23 +37,21 @@ export const ProviderMenu = (props: IProviderMenuProps) => {
     !activatingConnector &&
     connector !== injected &&
     props.isMobileMedia &&
-    StakingProvider.Instance.providerType !== ProviderType.MetaMask
+    stakingProvider.providerType !== ProviderType.MetaMask
   ) {
-    //@ts-ignore
+    // @ts-ignore
     setActivatingConnector(injected)
-    activate(injected)
+    activate(injected).catch((err) => console.error(err))
   }
 
-  const storedProvider: any = StakingProvider.getLocalstorageItem('providerType')
+  const storedProvider: any = stakingProvider.getLocalstorageItem('providerType')
   const providerType: ProviderType | null = (storedProvider as ProviderType) || null
-  if (
-    !activatingConnector &&
-    providerType &&
-    providerType !== StakingProvider.Instance.providerType
-  ) {
-    //@ts-ignore
+  if (!activatingConnector && providerType && providerType !== stakingProvider.providerType) {
+    // @ts-ignore
     setActivatingConnector(ProviderTypeDictionary.getConnectorByProviderType(providerType)!)
-    activate(ProviderTypeDictionary.getConnectorByProviderType(providerType)!)
+    activate(ProviderTypeDictionary.getConnectorByProviderType(providerType)!).catch((err) =>
+      console.error(err)
+    )
   }
 
   // handle logic to connect in reaction to certain events on the injected ethereum provider, if it exists
@@ -71,8 +69,9 @@ export const ProviderMenu = (props: IProviderMenuProps) => {
           isActivating={activating}
           onSelect={() => {
             if (!currentConnector) return
-            //@ts-ignore
+            // @ts-ignore
             setActivatingConnector(currentConnector)
+            // tslint:disable-next-line
             activate(currentConnector, (err) => console.error(err))
           }}
         />

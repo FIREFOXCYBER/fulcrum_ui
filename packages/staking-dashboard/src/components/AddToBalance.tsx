@@ -1,9 +1,8 @@
+import { BigNumber } from '@0x/utils'
 import React, { ChangeEvent, Component } from 'react'
-
+import { ReactComponent as TokenBpt } from '../assets/images/token-bpt.svg'
 import { ReactComponent as TokenBzrx } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as TokenVBzrx } from '../assets/images/token-vbzrx.svg'
-import { ReactComponent as TokenBpt } from '../assets/images/token-bpt.svg'
-import { BigNumber } from '@0x/utils'
 
 interface IAddToBalanceProps {
   bzrxMax: BigNumber
@@ -45,7 +44,7 @@ export class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceSta
     }
   }
 
-  componentDidUpdate(prevProps: IAddToBalanceProps): void {
+  public componentDidUpdate(prevProps: IAddToBalanceProps): void {
     if (
       this.props.bzrxMax !== prevProps.bzrxMax ||
       this.props.vbzrxMax !== prevProps.vbzrxMax ||
@@ -89,19 +88,19 @@ export class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceSta
                   onChange={this.changeBzrxBalance}
                 />
                 <div className="line">
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                  <div></div>
+                  <div/>
+                  <div/>
+                  <div/>
+                  <div/>
                 </div>
                 <div
                   className="progress"
                   style={{
                     width: `calc(100%*${this.state.bzrxBalance}/${this.props.bzrxMax})`
-                  }}></div>
+                  }}/>
               </div>
               <label className="sign">BZRX</label>
-              <TokenBzrx className="token-logo"></TokenBzrx>
+              <TokenBzrx className="token-logo"/>
             </div>
           )}
           {this.props.vbzrxMax.gt(0) && (
@@ -125,20 +124,20 @@ export class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceSta
                   onChange={this.changeVBzrxBalance}
                 />
                 <div className="line">
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                  <div></div>
+                  <div/>
+                  <div/>
+                  <div/>
+                  <div/>
                 </div>
                 <div
                   className="progress"
                   style={{
                     width: `calc(100%*${this.state.vBzrxBalance}/${this.props.vbzrxMax})`
-                  }}></div>
+                  }}/>
               </div>
               {/* <span>{this.numberWithCommas(this.state.vBzrxBalance)}</span> */}
               <label className="sign">vBZRX</label>
-              <TokenVBzrx className="token-logo"></TokenVBzrx>
+              <TokenVBzrx className="token-logo"/>
             </div>
           )}
           {this.props.bptMax.gt(0) && (
@@ -162,20 +161,20 @@ export class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceSta
                   onChange={this.changeBptBalance}
                 />
                 <div className="line">
-                  <div></div>
-                  <div></div>
-                  <div></div>
-                  <div></div>
+                  <div/>
+                  <div/>
+                  <div/>
+                  <div/>
                 </div>
                 <div
                   className="progress"
                   style={{
                     width: `calc(100%*${this.state.bptBalance}/${this.props.bptMax})`
-                  }}></div>
+                  }}/>
               </div>
               {/* <span>{this.numberWithCommas(this.state.bptBalance)}</span> */}
               <label className="sign">BPT</label>
-              <TokenBpt className="token-logo"></TokenBpt>
+              <TokenBpt className="token-logo"/>
             </div>
           )}
           <div className="group-buttons">
@@ -258,16 +257,18 @@ export class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceSta
 
   private changeBalance = (balanceText: string, walletBalance: BigNumber) => {
     const balance = new BigNumber(balanceText)
-    if (balance.gt(walletBalance))
+    if (balance.gt(walletBalance)) {
       return {
         balance: walletBalance,
         inputBalance: walletBalance.toFixed(2)
       }
-    if (balance.lt(0) || !balanceText)
+    }
+    if (balance.lt(0) || !balanceText) {
       return {
         balance: new BigNumber(0),
         inputBalance: '0'
       }
+    }
 
     const inputBalance = this.formatPrecision(balanceText)
 

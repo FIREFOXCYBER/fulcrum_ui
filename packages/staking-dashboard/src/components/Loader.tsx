@@ -14,13 +14,13 @@ export class Loader extends Component<ILoaderProps> {
   }
   public renderDots = () => {
     const animationDuration = 0.35 * this.props.quantityDots
-    let wrapperDots = []
-    for (var i = 0; i < this.props.quantityDots; i++) {
+    const wrapperDots = []
+    for (let i = 0; i < this.props.quantityDots; i++) {
       wrapperDots.push(
         <span
           key={i}
           className={`${this.props.sizeDots}-dots`}
-          style={{ animationDuration: `${animationDuration}s` }}></span>
+          style={{ animationDuration: `${animationDuration}s` }}/>
       )
     }
     return wrapperDots
@@ -30,7 +30,7 @@ export class Loader extends Component<ILoaderProps> {
     return (
       <React.Fragment>
         <div className="loader">
-          {this.props.isOverlay ? <div className="loader-wrapper"></div> : null}
+          {this.props.isOverlay ? <div className="loader-wrapper"/> : null}
           <div className={`${this.props.isOverlay ? `loader-overlay` : ``}`}>
             <div className={`loader-content loader-content-${this.props.sizeDots}`}>
               {this.props.title.length !== 0 ? (

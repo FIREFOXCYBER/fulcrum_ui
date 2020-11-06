@@ -2,9 +2,9 @@ import React, { MouseEvent } from 'react'
 export const FooterMenu = () => {
   const contactClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault()
-    //@ts-ignore
+    // @ts-ignore
     if (window.Intercom) {
-      //@ts-ignore
+      // @ts-ignore
       window.Intercom('show')
     }
   }

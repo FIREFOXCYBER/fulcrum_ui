@@ -1,11 +1,11 @@
 import React from 'react'
-import { ReactComponent as LogoSign } from '../assets/images/logo-sign.svg'
-import { ReactComponent as LogoBzx } from '../assets/images/logo-bzx.svg'
-import { ReactComponent as Github } from '../assets/images/github.svg'
-import { ReactComponent as Twitter } from '../assets/images/twitter.svg'
-import { ReactComponent as Telegram } from '../assets/images/telegram.svg'
 import { ReactComponent as Discord } from '../assets/images/discord.svg'
+import { ReactComponent as Github } from '../assets/images/github.svg'
+import { ReactComponent as LogoBzx } from '../assets/images/logo-bzx.svg'
+import { ReactComponent as LogoSign } from '../assets/images/logo-sign.svg'
 import { ReactComponent as Medium } from '../assets/images/medium.svg'
+import { ReactComponent as Telegram } from '../assets/images/telegram.svg'
+import { ReactComponent as Twitter } from '../assets/images/twitter.svg'
 
 interface IFooterSocialProps {
   isShowSocial: boolean

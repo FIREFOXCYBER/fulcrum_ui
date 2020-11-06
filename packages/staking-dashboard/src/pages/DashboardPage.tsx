@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Header } from '../layout/Header'
 import { Form } from '../components/Form'
+import { Header } from '../layout/Header'
 
 interface IDashboardPageProps {
   doNetworkConnect: () => void

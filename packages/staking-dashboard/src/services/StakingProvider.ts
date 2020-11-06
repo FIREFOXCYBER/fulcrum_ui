@@ -1,29 +1,29 @@
 import { Web3ProviderEngine } from '@0x/subproviders'
-import { Web3Wrapper } from '@0x/web3-wrapper'
-import { EventEmitter } from 'events'
-
-import { IWeb3ProviderSettings } from '../domain/IWeb3ProviderSettings'
-
-import { AbstractConnector } from '@web3-react/abstract-connector'
-import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
-import { ProviderType } from '../domain/ProviderType'
-import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
-import { StakingProviderEvents } from './events/StakingProviderEvents'
-import { ContractsSource } from './ContractsSource'
 import { BigNumber } from '@0x/utils'
+import { TransactionReceipt, Web3Wrapper } from '@0x/web3-wrapper'
+import { AbstractConnector } from '@web3-react/abstract-connector'
+import { EventEmitter } from 'events'
 import { Asset } from '../domain/Asset'
 import { AssetsDictionary } from '../domain/AssetsDictionary'
+import { BecomeRepresentativeRequest } from '../domain/BecomeRepresentativeRequest'
+import { ClaimReabteRewardsRequest } from '../domain/ClaimReabteRewardsRequest'
+import { ClaimRequest } from '../domain/ClaimRequest'
+import { ConvertRequest } from '../domain/ConvertRequest'
+import { IWeb3ProviderSettings } from '../domain/IWeb3ProviderSettings'
+import { ProviderType } from '../domain/ProviderType'
+import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import { RequestTask } from '../domain/RequestTask'
 import { StakingRequest } from '../domain/StakingRequest'
-import { ConvertRequest } from '../domain/ConvertRequest'
-import { ClaimRequest } from '../domain/ClaimRequest'
-import { ClaimReabteRewardsRequest } from '../domain/ClaimReabteRewardsRequest'
-import { BecomeRepresentativeRequest } from '../domain/BecomeRepresentativeRequest'
+import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
+import { ContractsSource } from './ContractsSource'
+import { StakingProviderEvents } from './events/StakingProviderEvents'
 
 const isMainnetProd =
   process.env.NODE_ENV &&
   process.env.NODE_ENV !== 'development' &&
   process.env.REACT_APP_ETH_NETWORK === 'mainnet'
+
+const INITIAL_NETWORK = process.env.REACT_APP_ETH_NETWORK
 
 const getNetworkIdByString = (networkName: string | undefined) => {
   switch (networkName) {
@@ -39,8 +39,8 @@ const getNetworkIdByString = (networkName: string | undefined) => {
       return 0
   }
 }
-const networkName = process.env.REACT_APP_ETH_NETWORK
-const initialNetworkId = getNetworkIdByString(networkName)
+
+const initialNetworkId = getNetworkIdByString(INITIAL_NETWORK)
 
 export class StakingProvider {
   public static Instance: StakingProvider
@@ -62,59 +62,63 @@ export class StakingProvider {
   public unsupportedNetwork: boolean = false
   private requestTask: RequestTask | undefined
 
-  public static readonly UNLIMITED_ALLOWANCE_IN_BASE_UNITS = new BigNumber(2).pow(256).minus(1)
+  public readonly UNLIMITED_ALLOWANCE_IN_BASE_UNITS = new BigNumber(2).pow(256).minus(1)
 
   constructor() {
     // init
     this.eventEmitter = new EventEmitter()
     this.eventEmitter.setMaxListeners(1000)
 
-    //TasksQueue.Instance.on(TasksQueueEvents.Enqueued, this.onTaskEnqueued);
+    // TasksQueue.Instance.on(TasksQueueEvents.Enqueued, this.onTaskEnqueued);
 
-    // singleton
-    if (!StakingProvider.Instance) {
-      StakingProvider.Instance = this
-    }
-
-    const storedProvider: any = StakingProvider.getLocalstorageItem('providerType')
+    const storedProvider: any = this.getLocalstorageItem('providerType')
     const providerType: ProviderType | null = (storedProvider as ProviderType) || null
 
-    this.web3ProviderSettings = StakingProvider.getWeb3ProviderSettings(initialNetworkId)
+    this.web3ProviderSettings = this.getWeb3ProviderSettings(initialNetworkId)
     if (!providerType || providerType === ProviderType.None) {
-      // StakingProvider.Instance.isLoading = true;
+      // this.isLoading = true;
       // setting up readonly provider
-      this.web3ProviderSettings = StakingProvider.getWeb3ProviderSettings(initialNetworkId)
-      Web3ConnectionFactory.setReadonlyProvider().then(() => {
-        const web3Wrapper = Web3ConnectionFactory.currentWeb3Wrapper
-        const engine = Web3ConnectionFactory.currentWeb3Engine
-        const canWrite = Web3ConnectionFactory.canWrite
+      this.web3ProviderSettings = this.getWeb3ProviderSettings(initialNetworkId)
+      Web3ConnectionFactory.setReadonlyProvider()
+        .then(() => {
+          const web3Wrapper = Web3ConnectionFactory.currentWeb3Wrapper
+          const engine = Web3ConnectionFactory.currentWeb3Engine
+          const canWrite = Web3ConnectionFactory.canWrite
 
-        if (web3Wrapper && this.web3ProviderSettings) {
-          const contractsSource = new ContractsSource(
-            engine,
-            this.web3ProviderSettings.networkId,
-            canWrite
-          )
-          contractsSource.Init().then(() => {
-            this.web3Wrapper = web3Wrapper
-            this.providerEngine = engine
-            this.contractsSource = contractsSource
-            this.eventEmitter.emit(StakingProviderEvents.ProviderAvailable)
-          })
-        }
-      })
+          if (web3Wrapper && this.web3ProviderSettings) {
+            const contractsSource = new ContractsSource(
+              engine,
+              this.web3ProviderSettings.networkId,
+              canWrite
+            )
+            contractsSource
+              .Init()
+              .then(() => {
+                this.web3Wrapper = web3Wrapper
+                this.providerEngine = engine
+                this.contractsSource = contractsSource
+                this.eventEmitter.emit(StakingProviderEvents.ProviderAvailable)
+              })
+              .catch((err) => {
+                // TODO: actually handle error
+                console.error(err)
+              })
+          }
+        })
+        .catch((err) => {
+          // TODO: actually handle error
+          console.error(err)
+        })
     }
-
-    return StakingProvider.Instance
   }
 
-  public static getLocalstorageItem(item: string): string {
+  public getLocalstorageItem(item: string): string {
     let response = ''
     response = localStorage.getItem(item) || ''
     return response
   }
 
-  public static setLocalstorageItem(item: string, val: string) {
+  public setLocalstorageItem(item: string, val: string) {
     localStorage.setItem(item, val)
   }
 
@@ -147,15 +151,16 @@ export class StakingProvider {
 
     if (this.web3Wrapper && canWrite) {
       const web3EngineAccounts = await this.web3Wrapper.getAvailableAddressesAsync()
-      if (web3EngineAccounts.length > 0 && this.accounts.length === 0)
+      if (web3EngineAccounts.length > 0 && this.accounts.length === 0) {
         this.accounts = web3EngineAccounts
+      }
       if (this.accounts.length === 0) {
         canWrite = false // revert back to read-only
       }
     }
 
     if (this.web3Wrapper && this.web3ProviderSettings.networkId > 0) {
-      const newContractsSource = await new ContractsSource(
+      const newContractsSource = new ContractsSource(
         this.providerEngine,
         this.web3ProviderSettings.networkId,
         canWrite
@@ -168,13 +173,13 @@ export class StakingProvider {
 
     this.providerType = canWrite ? providerType : ProviderType.None
 
-    StakingProvider.setLocalstorageItem('providerType', this.providerType)
+    this.setLocalstorageItem('providerType', this.providerType)
   }
 
-  public async setWeb3ProviderMobileFinalize(
+  public setWeb3ProviderMobileFinalize = async (
     providerType: ProviderType,
     providerData: [Web3Wrapper | null, Web3ProviderEngine | null, boolean, number, string]
-  ) {
+  ) => {
     // : Promise<boolean> {
     this.web3Wrapper = providerData[0]
     this.providerEngine = providerData[1]
@@ -182,15 +187,16 @@ export class StakingProvider {
     let networkId = providerData[3]
     const selectedAccount = providerData[4]
 
-    this.web3ProviderSettings = await StakingProvider.getWeb3ProviderSettings(networkId)
+    this.web3ProviderSettings = this.getWeb3ProviderSettings(networkId)
+
     if (this.web3Wrapper) {
-      if (this.web3ProviderSettings.networkName !== process.env.REACT_APP_ETH_NETWORK) {
+      if (this.web3ProviderSettings.networkName !== INITIAL_NETWORK) {
         // TODO: inform the user they are on the wrong network. Make it provider specific (MetaMask, etc)
 
         this.unsupportedNetwork = true
         canWrite = false // revert back to read-only
         networkId = await this.web3Wrapper.getNetworkIdAsync()
-        this.web3ProviderSettings = await StakingProvider.getWeb3ProviderSettings(networkId)
+        this.web3ProviderSettings = this.getWeb3ProviderSettings(networkId)
       } else {
         this.unsupportedNetwork = false
       }
@@ -212,19 +218,19 @@ export class StakingProvider {
       }
     }
     if (this.web3Wrapper && this.web3ProviderSettings.networkId > 0) {
-      this.contractsSource = await new ContractsSource(
+      this.contractsSource = new ContractsSource(
         this.providerEngine,
         this.web3ProviderSettings.networkId,
         canWrite
       )
-      //this.borrowRequestAwaitingStore = new BorrowRequestAwaitingStore(this.web3ProviderSettings.networkId, this.web3Wrapper);
+      // this.borrowRequestAwaitingStore = new BorrowRequestAwaitingStore(this.web3ProviderSettings.networkId, this.web3Wrapper);
       if (canWrite) {
         this.providerType = providerType
       } else {
         this.providerType = ProviderType.None
       }
 
-      StakingProvider.setLocalstorageItem('providerType', providerType)
+      this.setLocalstorageItem('providerType', providerType)
     } else {
       this.contractsSource = null
     }
@@ -232,12 +238,13 @@ export class StakingProvider {
     if (this.contractsSource) {
       await this.contractsSource.Init()
     }
-    StakingProvider.Instance.isLoading = false
+    this.isLoading = false
   }
 
-  public static getWeb3ProviderSettings(networkId: number | null): IWeb3ProviderSettings {
-    // tslint:disable-next-line:one-variable-per-declaration
-    let networkName, etherscanURL
+  public getWeb3ProviderSettings(networkId: number | null): IWeb3ProviderSettings {
+    let networkName
+    let etherscanURL
+
     switch (networkId) {
       case 1:
         networkName = 'mainnet'
@@ -361,24 +368,33 @@ export class StakingProvider {
       case Asset.ETH:
       case Asset.WETH:
         amount = new BigNumber(10 ** 18).multipliedBy(1500)
+        break
       case Asset.WBTC:
         amount = new BigNumber(10 ** 8).multipliedBy(25)
+        break
       case Asset.LINK:
         amount = new BigNumber(10 ** 18).multipliedBy(60000)
+        break
       case Asset.ZRX:
         amount = new BigNumber(10 ** 18).multipliedBy(750000)
+        break
       case Asset.KNC:
         amount = new BigNumber(10 ** 18).multipliedBy(550000)
+        break
       case Asset.DAI:
       case Asset.SUSD:
         amount = new BigNumber(10 ** 18).multipliedBy(375000)
+        break
       case Asset.USDC:
       case Asset.USDT:
         amount = new BigNumber(10 ** 6).multipliedBy(375000)
+        break
       case Asset.REP:
         amount = new BigNumber(10 ** 18).multipliedBy(15000)
+        break
       case Asset.MKR:
         amount = new BigNumber(10 ** 18).multipliedBy(1250)
+        break
       default:
         break
     }
@@ -572,14 +588,16 @@ export class StakingProvider {
   }
 
   public doOptin = async () => {
-    let receipt = null
-
     const account =
       this.accounts.length > 0 && this.accounts[0] ? this.accounts[0].toLowerCase() : null
-    if (!this.contractsSource) return receipt
+    if (!this.contractsSource) {
+      return null
+    }
 
     const traderCompensationContract = await this.contractsSource.getTraderCompensationContract()
-    if (!account || !traderCompensationContract) return receipt
+    if (!account || !traderCompensationContract) {
+      return null
+    }
 
     let gasAmountBN
     let gasAmount
@@ -678,9 +696,14 @@ export class StakingProvider {
   // }
 
   public getRepresentatives = async (): Promise<
-    { wallet: string; BZRX: BigNumber; vBZRX: BigNumber; LPToken: BigNumber }[]
+    Array<{ wallet: string; BZRX: BigNumber; vBZRX: BigNumber; LPToken: BigNumber }>
   > => {
-    let result: { wallet: string; BZRX: BigNumber; vBZRX: BigNumber; LPToken: BigNumber }[] = []
+    let result: Array<{
+      wallet: string
+      BZRX: BigNumber
+      vBZRX: BigNumber
+      LPToken: BigNumber
+    }> = []
 
     const account =
       this.accounts.length > 0 && this.accounts[0] ? this.accounts[0].toLowerCase() : null
@@ -721,15 +744,29 @@ export class StakingProvider {
   public stakeableByAsset = async (asset: Asset): Promise<BigNumber> => {
     let result = new BigNumber(0)
 
+    if (!this.contractsSource) {
+      return result
+    }
+
     const account =
       this.accounts.length > 0 && this.accounts[0] ? this.accounts[0].toLowerCase() : null
-    if (!this.contractsSource) return result
+
+    if (!account) {
+      return result
+    }
 
     const bZxContract = await this.contractsSource.getBZRXStakingInterimContract()
-    if (!account || !bZxContract) return result
+
+    if (!bZxContract) {
+      return result
+    }
 
     const tokenErc20Address = this.getErc20AddressOfAsset(asset)
-    if (!tokenErc20Address) return result
+
+    if (!tokenErc20Address) {
+      return result
+    }
+
     const stakeable = await bZxContract.stakeableByAsset.callAsync(tokenErc20Address, account, {
       from: account
     })
@@ -787,7 +824,7 @@ export class StakingProvider {
   }
 
   public getUserEarnings = async (): Promise<BigNumber> => {
-    let result = new BigNumber(0)
+    const result = new BigNumber(0)
 
     const account =
       this.accounts.length > 0 && this.accounts[0] ? this.accounts[0].toLowerCase() : null
@@ -910,7 +947,7 @@ export class StakingProvider {
     const srcAssetErc20Address = this.getErc20AddressOfAsset(srcAsset)
     const destAssetErc20Address = this.getErc20AddressOfAsset(destAsset)
     if (!srcAmount) {
-      srcAmount = StakingProvider.UNLIMITED_ALLOWANCE_IN_BASE_UNITS
+      srcAmount = this.UNLIMITED_ALLOWANCE_IN_BASE_UNITS
     } else {
       srcAmount = new BigNumber(srcAmount.toFixed(1, 1))
     }
@@ -942,46 +979,36 @@ export class StakingProvider {
     return result
   }
 
-  public waitForTransactionMined = async (txHash: string): Promise<any> => {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!this.web3Wrapper) {
-          // noinspection ExceptionCaughtLocallyJS
-          throw new Error('web3 is not available')
-        }
-
-        this.waitForTransactionMinedRecursive(txHash, this.web3Wrapper, resolve, reject)
-      } catch (e) {
-        throw e
-      }
-    })
-  }
-
   private waitForTransactionMinedRecursive = async (
     txHash: string,
-    web3Wrapper: Web3Wrapper,
-    resolve: (value: any) => void,
-    reject: (value: any) => void
-  ) => {
-    try {
-      const receipt = await web3Wrapper.getTransactionReceiptIfExistsAsync(txHash)
-      if (receipt) {
-        resolve(receipt)
-      } else {
-        window.setTimeout(() => {
-          this.waitForTransactionMinedRecursive(txHash, web3Wrapper, resolve, reject)
-        }, 5000)
-      }
-    } catch (e) {
-      reject(e)
+    web3Wrapper: Web3Wrapper
+  ): Promise<TransactionReceipt> => {
+    const receipt = await web3Wrapper.getTransactionReceiptIfExistsAsync(txHash)
+    if (receipt) {
+      return receipt
+    } else {
+      await this.sleep(5000)
+      return this.waitForTransactionMinedRecursive(txHash, web3Wrapper)
     }
+  }
+
+  public waitForTransactionMined = async (txHash: string) => {
+    if (!this.web3Wrapper) {
+      throw new Error('web3 is not available')
+    }
+    return this.waitForTransactionMinedRecursive(txHash, this.web3Wrapper)
   }
 
   public onRequestConfirmed = async (
     request: StakingRequest | ConvertRequest | ClaimRequest | BecomeRepresentativeRequest
   ) => {
     if (request) {
-      this.processRequestTask(new RequestTask(request))
+      try {
+        await this.processRequestTask(new RequestTask(request))
+      } catch (err) {
+        // TODO: handle error
+        console.error(err)
+      }
     }
   }
 
@@ -1050,14 +1077,13 @@ export class StakingProvider {
       task.processingStepNext()
       await this.sleep(this.successDisplayTimeout)
       task.processingEnd(true, false, null)
-    } catch (e) {
+    } catch (err) {
       if (
-        !e.message.includes(`Request for method "eth_estimateGas" not handled by any subprovider`)
+        !err.message.includes(`Request for method "eth_estimateGas" not handled by any subprovider`)
       ) {
-        // tslint:disable-next-line:no-console
-        console.log(e)
+        console.log(err)
       }
-      task.processingEnd(false, false, e)
+      task.processingEnd(false, false, err)
     } finally {
       this.eventEmitter.emit(StakingProviderEvents.AskToCloseProgressDlg, task)
     }
@@ -1065,22 +1091,22 @@ export class StakingProvider {
   }
 
   private processStakingRequestTask = async (task: RequestTask, account: string) => {
-    const taskRequest = task.request as StakingRequest,
-      bzrxAmount = taskRequest.bzrxAmount,
-      vbzrxAmount = taskRequest.vbzrxAmount,
-      bptAmount = taskRequest.bptAmount,
-      address = taskRequest.address
+    const taskRequest = task.request as StakingRequest
+    const { bzrxAmount, vbzrxAmount, bptAmount, address } = taskRequest
 
     const bzrxStakingContract = await this.contractsSource!.getBZRXStakingInterimContract()
-    if (!bzrxStakingContract) throw new Error('No ERC20 contract available!')
+    if (!bzrxStakingContract) {
+      throw new Error('No ERC20 contract available!')
+    }
 
     const bzrxErc20Address = this.getErc20AddressOfAsset(Asset.BZRX)
     const vbzrxErc20Address = this.getErc20AddressOfAsset(Asset.vBZRX)
     const bptErc20Address = this.getErc20AddressOfAsset(Asset.BPT)
-    if (!bzrxErc20Address || !vbzrxErc20Address || !bptErc20Address)
+    if (!bzrxErc20Address || !vbzrxErc20Address || !bptErc20Address) {
       throw new Error('No ERC20 contract available!')
+    }
 
-    const encoded_input =
+    const encodedInput =
       account.toLowerCase() === address.toLowerCase()
         ? bzrxStakingContract.stake.getABIEncodedTransactionData(
             [bzrxErc20Address, vbzrxErc20Address, bptErc20Address],
@@ -1091,8 +1117,8 @@ export class StakingProvider {
             [bzrxAmount, vbzrxAmount, bptAmount],
             address
           )
-    console.log(encoded_input)
-    //Submitting loan
+    console.log(encodedInput)
+    // Submitting loan
     task.processingStepNext()
     let gasAmountBN
     let gasAmount
@@ -1177,14 +1203,14 @@ export class StakingProvider {
     // Waiting for token allowance
     task.processingStepNext()
     if (tokenAmount.gt(erc20allowance)) {
-      const approveHash = await tokenErc20Contract!.approve.sendTransactionAsync(
+      const approveHash = await tokenErc20Contract.approve.sendTransactionAsync(
         convertContract.address,
         tokenAmount,
         { from: account }
       )
       await this.waitForTransactionMined(approveHash)
     }
-    //Submitting loan
+    // Submitting loan
     task.processingStepNext()
 
     let gasAmountBN
@@ -1220,7 +1246,7 @@ export class StakingProvider {
   private processClaimRequestTask = async (task: RequestTask, account: string) => {
     const traderCompensationContract = await this.contractsSource!.getTraderCompensationContract()
     if (!traderCompensationContract) throw new Error('No ERC20 contract available!')
-    //Submitting loan
+    // Submitting loan
     task.processingStepNext()
     let gasAmountBN
     let gasAmount
@@ -1256,7 +1282,7 @@ export class StakingProvider {
   private processClaimReabteRewardsRequestTask = async (task: RequestTask, account: string) => {
     const bZxContract = await this.contractsSource!.getiBZxContract()
     if (!bZxContract) throw new Error('No ERC20 contract available!')
-    //Submitting loan
+    // Submitting loan
     task.processingStepNext()
     let gasAmountBN
     let gasAmount
@@ -1292,7 +1318,7 @@ export class StakingProvider {
   private processBecomeRepresentativeRequestTask = async (task: RequestTask, account: string) => {
     const bzrxStakingContract = await this.contractsSource!.getBZRXStakingInterimContract()
     if (!bzrxStakingContract) throw new Error('No ERC20 contract available!')
-    //Submitting loan
+    // Submitting loan
     task.processingStepNext()
     let gasAmountBN
     let gasAmount
@@ -1333,4 +1359,5 @@ export class StakingProvider {
     return this.requestTask
   }
 }
-new StakingProvider()
+
+export default new StakingProvider()

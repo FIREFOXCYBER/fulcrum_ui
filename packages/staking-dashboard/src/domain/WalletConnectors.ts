@@ -1,16 +1,17 @@
-import { InjectedConnector } from '@web3-react/injected-connector'
-import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
-import { WalletLinkConnector } from '@web3-react/walletlink-connector'
-import { LedgerConnector } from '@web3-react/ledger-connector'
-import { TrezorConnector } from '@web3-react/trezor-connector'
 import { AuthereumConnector } from '@web3-react/authereum-connector'
+import { BitskiConnector } from '@web3-react/bitski-connector'
 import { FortmaticConnector } from '@web3-react/fortmatic-connector'
+import { InjectedConnector } from '@web3-react/injected-connector'
+import { LedgerConnector } from '@web3-react/ledger-connector'
 import { PortisConnector } from '@web3-react/portis-connector'
 import { SquarelinkConnector } from '@web3-react/squarelink-connector'
-import { BitskiConnector } from '@web3-react/bitski-connector'
 import { TorusConnector } from '@web3-react/torus-connector'
-
+import { TrezorConnector } from '@web3-react/trezor-connector'
+import { WalletConnectConnector } from '@web3-react/walletconnect-connector'
+import { WalletLinkConnector } from '@web3-react/walletlink-connector'
 import configProviders from '../config/providers.json'
+
+const INITIAL_NETWORK = process.env.REACT_APP_ETH_NETWORK
 
 const getNetworkIdByString = (networkName: string | undefined) => {
   switch (networkName) {
@@ -26,13 +27,13 @@ const getNetworkIdByString = (networkName: string | undefined) => {
       return 0
   }
 }
-const networkName = process.env.REACT_APP_ETH_NETWORK
-const networkId = getNetworkIdByString(networkName)
+
+const networkId = getNetworkIdByString(INITIAL_NETWORK)
 
 const RPC_URL =
   networkId === 42
-    ? `https://eth-${networkName}.alchemyapi.io/v2/${configProviders.Alchemy_ApiKey_kovan}`
-    : `https://eth-${networkName}.alchemyapi.io/v2/${configProviders.Alchemy_ApiKey}`
+    ? `https://eth-${INITIAL_NETWORK}.alchemyapi.io/v2/${configProviders.Alchemy_ApiKey_kovan}`
+    : `https://eth-${INITIAL_NETWORK}.alchemyapi.io/v2/${configProviders.Alchemy_ApiKey}`
 
 const POLLING_INTERVAL = 3600000
 
@@ -67,22 +68,22 @@ export const trezor = new TrezorConnector({
 export const authereum = new AuthereumConnector({ chainId: networkId })
 
 export const fortmatic = new FortmaticConnector({
-  apiKey: configProviders.Fortmatic_ApiKey as string,
+  apiKey: configProviders.Fortmatic_ApiKey,
   chainId: networkId
 })
 
 export const portis = new PortisConnector({
-  dAppId: configProviders.Portis_DAppId as string,
+  dAppId: configProviders.Portis_DAppId,
   networks: [networkId]
 })
 
 export const squarelink = new SquarelinkConnector({
-  clientId: configProviders.Squarelink_ClientId as string,
+  clientId: configProviders.Squarelink_ClientId,
   networks: [networkId]
 })
 
 export const bitski = new BitskiConnector({
-  clientId: configProviders.Bitski_ClientId as string,
+  clientId: configProviders.Bitski_ClientId,
   network: networkId,
   redirectUri: `${window.location.origin}/callback.html`
 })
@@ -96,7 +97,7 @@ export const torus = new TorusConnector({
     buildEnv: 'production',
     enableLogging: false,
     network: {
-      host: networkName || 'mainnet',
+      host: INITIAL_NETWORK || 'mainnet',
       chainId: networkId
     },
     showTorusButton: true

@@ -4,7 +4,7 @@ import { ProviderTypeDetails } from '../domain/ProviderTypeDetails'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import { ProviderChangedEvent } from '../services/events/ProviderChangedEvent'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
-import { StakingProvider } from '../services/StakingProvider'
+import stakingProvider from '../services/StakingProvider'
 
 export interface IOnChainIndicatorProps {
   doNetworkConnect: () => void
@@ -30,14 +30,12 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
       providerTypeDetails: null
     }
 
-    StakingProvider.Instance.eventEmitter.on(
+    stakingProvider.eventEmitter.on(
       StakingProviderEvents.ProviderIsChanging,
       this.onProviderIsChanging
     )
-    StakingProvider.Instance.eventEmitter.on(
-      StakingProviderEvents.ProviderChanged,
-      this.onProviderChanged
-    )
+
+    stakingProvider.eventEmitter.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
   }
   private _isMounted: boolean = false
 
@@ -65,7 +63,7 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
 
   public componentWillUnmount(): void {
     this._isMounted = false
-    StakingProvider.Instance.eventEmitter.removeListener(
+    stakingProvider.eventEmitter.removeListener(
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )
@@ -73,21 +71,19 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
 
   private async derivedUpdate() {
     const accountText =
-      StakingProvider.Instance.accounts.length > 0 && StakingProvider.Instance.accounts[0]
-        ? StakingProvider.Instance.accounts[0].toLowerCase()
+      stakingProvider.accounts.length > 0 && stakingProvider.accounts[0]
+        ? stakingProvider.accounts[0].toLowerCase()
         : ''
 
     let providerTypeDetails = null
-    if (accountText && StakingProvider.Instance.providerType !== ProviderType.None) {
-      providerTypeDetails = ProviderTypeDictionary.providerTypes.get(
-        StakingProvider.Instance.providerType
-      )
+    if (accountText && stakingProvider.providerType !== ProviderType.None) {
+      providerTypeDetails = ProviderTypeDictionary.providerTypes.get(stakingProvider.providerType)
     }
 
-    const isLoading = StakingProvider.Instance.isLoading
-    const isSupportedNetwork = !StakingProvider.Instance.unsupportedNetwork
-    const etherscanURL = StakingProvider.Instance.web3ProviderSettings
-      ? StakingProvider.Instance.web3ProviderSettings.etherscanURL
+    const isLoading = stakingProvider.isLoading
+    const isSupportedNetwork = !stakingProvider.unsupportedNetwork
+    const etherscanURL = stakingProvider.web3ProviderSettings
+      ? stakingProvider.web3ProviderSettings.etherscanURL
       : ''
 
     this._isMounted &&
@@ -111,7 +107,7 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
     } = this.state
 
     let walletAddressText: string
-    if (StakingProvider.Instance.unsupportedNetwork) {
+    if (stakingProvider.unsupportedNetwork) {
       walletAddressText = 'Wrong Network!'
     } else if (accountText) {
       walletAddressText = `${accountText.slice(0, 6)}...${accountText.slice(
@@ -185,7 +181,7 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
         return (
           <React.Fragment>
             <span className="on-chain-indicator__provider-txt">Click To Connect Wallet</span>
-            {StakingProvider.Instance.unsupportedNetwork ? (
+            {stakingProvider.unsupportedNetwork ? (
               <span className="on-chain-indicator__wallet-address">{walletAddressText}</span>
             ) : (
               ``

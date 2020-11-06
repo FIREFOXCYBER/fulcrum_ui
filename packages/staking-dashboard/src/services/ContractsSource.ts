@@ -1,10 +1,10 @@
-import * as _ from 'lodash'
+import { BigNumber } from '@0x/utils'
+import _ from 'lodash'
+import { BZRXStakingInterimContract } from '../contracts/BZRXStakingInterim'
 import { convertContract } from '../contracts/convert'
 import { erc20Contract } from '../contracts/erc20'
-import { BZRXStakingInterimContract } from '../contracts/BZRXStakingInterim'
-import { BigNumber } from '@0x/utils'
-import { traderCompensationContract } from '../contracts/traderCompensation'
 import { iBZxContract } from '../contracts/iBZxContract'
+import { traderCompensationContract } from '../contracts/traderCompensation'
 
 import { oracleContract } from '../contracts/oracle'
 
@@ -18,6 +18,7 @@ interface ITokenContractInfo {
   index: BigNumber
   version?: number
 }
+
 export class ContractsSource {
   private readonly provider: any
 

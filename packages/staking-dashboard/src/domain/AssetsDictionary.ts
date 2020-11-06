@@ -1,10 +1,9 @@
-import { Asset } from './Asset'
-import { AssetDetails } from './AssetDetails'
-
+import { ReactComponent as ETHLogo } from '../assets/images/ic_token_eth.svg'
+import { ReactComponent as BPT } from '../assets/images/token-bpt.svg'
 import { ReactComponent as BZRX } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as vBZRX } from '../assets/images/token-vbzrx.svg'
-import { ReactComponent as BPT } from '../assets/images/token-bpt.svg'
-import { ReactComponent as ETHLogo } from '../assets/images/ic_token_eth.svg'
+import { Asset } from './Asset'
+import { AssetDetails } from './AssetDetails'
 
 export class AssetsDictionary {
   public static assets: Map<Asset, AssetDetails> = new Map<Asset, AssetDetails>([

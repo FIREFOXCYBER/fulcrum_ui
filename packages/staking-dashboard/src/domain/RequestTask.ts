@@ -1,11 +1,11 @@
 import { EventEmitter } from 'events'
-import { RequestStatus } from './RequestStatus'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
-import { StakingRequest } from './StakingRequest'
-import { ConvertRequest } from './ConvertRequest'
-import { ClaimRequest } from './ClaimRequest'
-import { ClaimReabteRewardsRequest } from './ClaimReabteRewardsRequest'
 import { BecomeRepresentativeRequest } from './BecomeRepresentativeRequest'
+import { ClaimReabteRewardsRequest } from './ClaimReabteRewardsRequest'
+import { ClaimRequest } from './ClaimRequest'
+import { ConvertRequest } from './ConvertRequest'
+import { RequestStatus } from './RequestStatus'
+import { StakingRequest } from './StakingRequest'
 
 export class RequestTask {
   private eventEmitter: EventEmitter | null = null

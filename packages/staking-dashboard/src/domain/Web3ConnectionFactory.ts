@@ -1,13 +1,10 @@
-import { Web3Wrapper } from '@0x/web3-wrapper'
-
 import { SignerSubprovider, Web3ProviderEngine } from '@0x/subproviders'
+import { Web3Wrapper } from '@0x/web3-wrapper'
 // @ts-ignore
 import { AlchemySubprovider } from '@alch/alchemy-web3'
-
-import configProviders from '../config/providers.json'
-
 import { AbstractConnector } from '@web3-react/abstract-connector'
 import { ConnectorUpdate } from '@web3-react/types'
+import configProviders from '../config/providers.json'
 
 const ethNetwork = process.env.REACT_APP_ETH_NETWORK
 
@@ -55,7 +52,7 @@ export class Web3ConnectionFactory {
     } catch (e) {
       console.log(e)
 
-      await providerEngine.stop()
+      providerEngine.stop()
 
       // rebuild providerEngine
       providerEngine = new Web3ProviderEngine({ pollingInterval: 3600000 }) // 1 hour polling
@@ -71,26 +68,25 @@ export class Web3ConnectionFactory {
   }
 
   public static async setReadonlyProvider() {
-    let providerEngine: Web3ProviderEngine = new Web3ProviderEngine({ pollingInterval: 3600000 }) // 1 hour polling
+    const providerEngine: Web3ProviderEngine = new Web3ProviderEngine({ pollingInterval: 3600000 }) // 1 hour polling
 
     const alchemyProvider = await this.getAlchemyProvider()
     providerEngine.addProvider(alchemyProvider)
 
-    // @ts-ignore
-    await providerEngine.start()
-
-    Web3ConnectionFactory.currentWeb3Engine = providerEngine
-    Web3ConnectionFactory.currentWeb3Wrapper = new Web3Wrapper(providerEngine)
-    Web3ConnectionFactory.networkId = await Web3ConnectionFactory.currentWeb3Wrapper.getNetworkIdAsync()
-    Web3ConnectionFactory.canWrite = false
-    Web3ConnectionFactory.userAccount = null
+    providerEngine.start(async () => {
+      Web3ConnectionFactory.currentWeb3Engine = providerEngine
+      Web3ConnectionFactory.currentWeb3Wrapper = new Web3Wrapper(providerEngine)
+      Web3ConnectionFactory.networkId = await Web3ConnectionFactory.currentWeb3Wrapper.getNetworkIdAsync()
+      Web3ConnectionFactory.canWrite = false
+      Web3ConnectionFactory.userAccount = null
+    })
   }
 
   public static async updateConnector(update: ConnectorUpdate) {
     const { chainId, account } = update
 
     if (chainId) {
-      let networkId = chainId.toString()
+      const networkId = chainId.toString()
       Web3ConnectionFactory.networkId = networkId.includes('0x')
         ? parseInt(networkId, 16)
         : parseInt(networkId, 10)

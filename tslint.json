@@ -12,7 +12,8 @@
     "member-ordering": false,
     "jsx-no-lambda": false,
     "no-empty-interface": false,
-    "object-literal-shorthand": false
+    "object-literal-shorthand": false,
+    "no-console": false
   },
   "rulesDirectory": []
 }

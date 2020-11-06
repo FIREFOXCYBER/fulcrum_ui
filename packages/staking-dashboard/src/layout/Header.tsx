@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
-import { ReactComponent as LogoStaking } from '../assets/images/logo-staking.svg'
-import { ReactComponent as LogoSign } from '../assets/images/logo-sign.svg'
 import { Link } from 'react-router-dom'
-import { OnChainIndicator } from '../components/OnChainIndicator'
-import { FooterSocial } from './FooterSocial'
+import { ReactComponent as LogoSign } from '../assets/images/logo-sign.svg'
+import { ReactComponent as LogoStaking } from '../assets/images/logo-staking.svg'
 import { ReactComponent as MenuIconClose } from '../assets/images/menu-close.svg'
 import { ReactComponent as MenuIconOpen } from '../assets/images/menu-open.svg'
+import { OnChainIndicator } from '../components/OnChainIndicator'
+import { FooterSocial } from './FooterSocial'
 
 interface IHeaderProps {
   doNetworkConnect: () => void
@@ -24,7 +24,7 @@ export class Header extends Component<IHeaderProps, IHeaderState> {
     }
   }
 
-  componentDidUpdate(prevProps: IHeaderProps, prevState: IHeaderState): void {
+  public componentDidUpdate(prevProps: IHeaderProps, prevState: IHeaderState): void {
     if (this.state.isMenuOpen !== prevState.isMenuOpen) {
       this.state.isMenuOpen
         ? document.body.classList.add('overflow')

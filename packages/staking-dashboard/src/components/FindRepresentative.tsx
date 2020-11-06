@@ -1,13 +1,10 @@
-import React, { Component, ChangeEvent } from 'react'
-import { ReactComponent as CloseIcon } from '../assets/images/ic__close.svg'
-
-import { ReactComponent as Search } from '../assets/images/icon-search.svg'
-
-import { FindRepresentativeItem } from '../components/FindRepresentativeItem'
-import { IRep } from '../domain/IRep'
-
+import React, { ChangeEvent, Component } from 'react'
 import SimpleBar from 'simplebar-react'
 import 'simplebar/dist/simplebar.min.css'
+import { ReactComponent as CloseIcon } from '../assets/images/ic__close.svg'
+import { ReactComponent as Search } from '../assets/images/icon-search.svg'
+import { FindRepresentativeItem } from '../components/FindRepresentativeItem'
+import { IRep } from '../domain/IRep'
 
 export interface IFindRepresentativeProps {
   representative: IRep[]
@@ -33,17 +30,20 @@ export class FindRepresentative extends Component<
   }
 
   public getRepresentative = async () => {
-    let representative = this.props.representative
-
+    const representative = this.props.representative
     this.setState({ ...this.state, representative: representative, searchValue: '' })
   }
 
   public componentDidMount(): void {
-    this.getRepresentative()
+    this.getRepresentative().catch((err) => console.error(err))
   }
+
   public componentDidUpdate(prevProps: IFindRepresentativeProps): void {
-    if (this.props.representative !== prevProps.representative) this.getRepresentative()
+    if (this.props.representative !== prevProps.representative) {
+      this.getRepresentative().catch((err) => console.error(err))
+    }
   }
+
   public render() {
     const searchValue = this.state.searchValue.toLowerCase()
     const representativeData = this.state.representative
@@ -85,7 +85,7 @@ export class FindRepresentative extends Component<
   }
 
   public onSearch = (event: ChangeEvent<HTMLInputElement>) => {
-    let value = event.target.value ? event.target.value : ''
+    const value = event.target.value ? event.target.value : ''
     this.setState({ ...this.state, searchValue: value.toLowerCase() })
   }
 }

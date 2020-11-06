@@ -1,27 +1,24 @@
-import { Web3Wrapper } from '@0x/web3-wrapper'
-import { Web3ReactProvider } from '@web3-react/core'
-import { AbstractConnector } from '@web3-react/abstract-connector'
 import { Web3ProviderEngine } from '@0x/subproviders'
-import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
-import { StakingProvider } from '../services/StakingProvider'
-import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
-import { ProviderChangedEvent } from '../services/events/ProviderChangedEvent'
-import Modal from 'react-modal'
-
-import Intercom from 'react-intercom'
-import { ProviderMenu } from './ProviderMenu'
-
+import { Web3Wrapper } from '@0x/web3-wrapper'
+import { AbstractConnector } from '@web3-react/abstract-connector'
+import { Web3ReactProvider } from '@web3-react/core'
+import { ConnectorEvent, ConnectorUpdate } from '@web3-react/types'
 import React, { Component } from 'react'
 import TagManager from 'react-gtm-module'
-
-import { DashboardPage } from '../pages/DashboardPage'
-import { Footer } from '../layout/Footer'
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
-import { ConnectorEvent, ConnectorUpdate } from '@web3-react/types'
-import { ProviderType } from '../domain/ProviderType'
-import { LocationListener } from './LocationListener'
+import Intercom from 'react-intercom'
+import Modal from 'react-modal'
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
 import configProviders from '../config/providers.json'
+import { ProviderType } from '../domain/ProviderType'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
+import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
+import { Footer } from '../layout/Footer'
+import { DashboardPage } from '../pages/DashboardPage'
+import { ProviderChangedEvent } from '../services/events/ProviderChangedEvent'
+import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
+import stakingProvider from '../services/StakingProvider'
+import { LocationListener } from './LocationListener'
+import { ProviderMenu } from './ProviderMenu'
 
 const isMainnetProd =
   process.env.NODE_ENV &&
@@ -55,144 +52,165 @@ export class AppRouter extends Component<any, IAppRouterState> {
     this.state = {
       isProviderMenuModalOpen: false,
       isLoading: false,
-      selectedProviderType: StakingProvider.Instance.providerType,
-      web3: StakingProvider.Instance.web3Wrapper,
+      selectedProviderType: stakingProvider.providerType,
+      web3: stakingProvider.web3Wrapper,
       isMobileMedia: false
     }
-    StakingProvider.Instance.eventEmitter.on(
+    stakingProvider.eventEmitter.on(
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )
   }
   public async onConnectorUpdated(update: ConnectorUpdate) {
-    console.log('onConnectorUpdated')
-    await StakingProvider.Instance.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
+    stakingProvider.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
 
     await Web3ConnectionFactory.updateConnector(update)
-    await StakingProvider.Instance.setWeb3ProviderFinalize(StakingProvider.Instance.providerType)
-    await StakingProvider.Instance.eventEmitter.emit(
+    await stakingProvider.setWeb3ProviderFinalize(stakingProvider.providerType)
+    stakingProvider.eventEmitter.emit(
       StakingProviderEvents.ProviderChanged,
       new ProviderChangedEvent(
-        StakingProvider.Instance.providerType,
-        StakingProvider.Instance.web3Wrapper
+        stakingProvider.providerType,
+        stakingProvider.web3Wrapper
       )
     )
   }
 
   public onDeactivate = async () => {
-    StakingProvider.Instance.isLoading = true
+    stakingProvider.isLoading = true
+    stakingProvider.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
+    if (!this._isMounted) {
+      return
+    }
 
-    await StakingProvider.Instance.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
-    ;(await this._isMounted) &&
-      this.setState({
-        ...this.state,
-        isProviderMenuModalOpen: false
-      })
-    await StakingProvider.Instance.setReadonlyWeb3Provider()
+    this.setState({
+      ...this.state,
+      isProviderMenuModalOpen: false
+    })
 
-    StakingProvider.Instance.isLoading = false
-    await StakingProvider.Instance.eventEmitter.emit(
+    await stakingProvider.setReadonlyWeb3Provider()
+
+    stakingProvider.isLoading = false
+    stakingProvider.eventEmitter.emit(
       StakingProviderEvents.ProviderChanged,
       new ProviderChangedEvent(
-        StakingProvider.Instance.providerType,
-        StakingProvider.Instance.web3Wrapper
+        stakingProvider.providerType,
+        stakingProvider.web3Wrapper
       )
     )
   }
 
   public onProviderTypeSelect = async (connector: AbstractConnector, account?: string) => {
+    console.log('onProviderTypeSelect')
     if (!this.state.isLoading) {
-      StakingProvider.Instance.isLoading = true
+      stakingProvider.isLoading = true
+      stakingProvider.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
 
-      await StakingProvider.Instance.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
-      ;(await this._isMounted) &&
-        this.setState(
-          {
-            ...this.state,
-            isLoading: true,
-            isProviderMenuModalOpen: false
-          },
-          async () => {
-            await StakingProvider.Instance.setWeb3Provider(connector, account)
-
-            StakingProvider.Instance.isLoading = false
-
-            await StakingProvider.Instance.eventEmitter.emit(
-              StakingProviderEvents.ProviderChanged,
-              new ProviderChangedEvent(
-                StakingProvider.Instance.providerType,
-                StakingProvider.Instance.web3Wrapper
-              )
-            )
-            ;(await this._isMounted) &&
-              this.setState({
-                ...this.state,
-                isLoading: false
-              })
-          }
-        )
-    } else {
-      ;(await this._isMounted) &&
-        this.setState({
+      if (!this._isMounted) {
+        return
+      }
+      this.setState(
+        {
           ...this.state,
+          isLoading: true,
           isProviderMenuModalOpen: false
-        })
-    }
-  }
+        },
+        async () => {
+          await stakingProvider.setWeb3Provider(connector, account)
 
-  public onRequestClose = async () => {
-    ;(await this._isMounted) &&
+          stakingProvider.isLoading = false
+
+          stakingProvider.eventEmitter.emit(
+            StakingProviderEvents.ProviderChanged,
+            new ProviderChangedEvent(
+              stakingProvider.providerType,
+              stakingProvider.web3Wrapper
+            )
+          )
+          if (this._isMounted) {
+            this.setState({
+              ...this.state,
+              isLoading: false
+            })
+          }
+        }
+      )
+    } else {
+      if (!this._isMounted) {
+        return
+      }
       this.setState({
         ...this.state,
         isProviderMenuModalOpen: false
       })
+    }
   }
+
+  public onRequestClose = async () => {
+    if (!this._isMounted) {
+      return
+    }
+    this.setState({
+      ...this.state,
+      isProviderMenuModalOpen: false
+    })
+  }
+
   public componentWillUnmount(): void {
     this._isMounted = false
-    StakingProvider.Instance.eventEmitter.removeListener(
+    stakingProvider.eventEmitter.removeListener(
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )
     window.removeEventListener('resize', this.didResize.bind(this))
   }
+
   public componentDidMount(): void {
     this._isMounted = true
     window.addEventListener('resize', this.didResize.bind(this))
     this.didResize()
-    //errors.setLogLevel("error")
     this.doNetworkConnect()
   }
-  private didResize = async () => {
+
+  private didResize = () => {
+    if (!this._isMounted) {
+      return
+    }
     const isMobileMedia = window.innerWidth <= 767
     if (isMobileMedia !== this.state.isMobileMedia) {
-      ;(await this._isMounted) && this.setState({ isMobileMedia })
+      this.setState({ isMobileMedia })
     }
   }
 
   public getLibrary = async (provider: any, connector: any): Promise<Web3ProviderEngine> => {
-    console.log(provider)
-    //handle connectors events (i.e. network changed)
+    // handle connectors events (i.e. network changed)
     await this.onProviderTypeSelect(connector)
-    if (!connector.listeners(ConnectorEvent.Update).includes(this.onConnectorUpdated))
+    if (!connector.listeners(ConnectorEvent.Update).includes(this.onConnectorUpdated)) {
       connector.on(ConnectorEvent.Update, this.onConnectorUpdated)
+    }
     return Web3ConnectionFactory.currentWeb3Engine
   }
 
-  public doNetworkConnect = async () => {
-    ;(await this._isMounted) &&
-      !this.state.isProviderMenuModalOpen &&
+  public doNetworkConnect = () => {
+    if (!this._isMounted) {
+      return
+    }
+    if (!this.state.isProviderMenuModalOpen) {
       this.setState({ ...this.state, isProviderMenuModalOpen: true })
+    }
   }
 
   public onProviderChanged = async (event: ProviderChangedEvent) => {
-    ;(await this._isMounted) &&
-      this.setState({
-        ...this.state,
-        selectedProviderType: event.providerType,
-        isLoading: false,
-        web3: event.web3
-      })
+    if (!this._isMounted) {
+      return
+    }
+    this.setState({
+      ...this.state,
+      selectedProviderType: event.providerType,
+      isLoading: false,
+      web3: event.web3
+    })
   }
+
   public render() {
     return (
       <Web3ReactProvider getLibrary={this.getLibrary}>
@@ -200,7 +218,8 @@ export class AppRouter extends Component<any, IAppRouterState> {
           isOpen={this.state.isProviderMenuModalOpen}
           onRequestClose={this.onRequestClose}
           className="modal-content-div"
-          overlayClassName="modal-overlay-div">
+          overlayClassName="modal-overlay-div"
+          ariaHideApp={false}>
           <ProviderMenu
             providerTypes={ProviderTypeDictionary.WalletProviders}
             isMobileMedia={this.state.isMobileMedia}

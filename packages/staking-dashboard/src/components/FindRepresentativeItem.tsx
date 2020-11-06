@@ -1,9 +1,8 @@
+import { BigNumber } from '@0x/utils'
 import React from 'react'
-
+import { ReactComponent as BPTIcon } from '../assets/images/token-bpt.svg'
 import { ReactComponent as BzrxIcon } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as VBzrxIcon } from '../assets/images/token-vbzrx.svg'
-import { ReactComponent as BPTIcon } from '../assets/images/token-bpt.svg'
-import { BigNumber } from '@0x/utils'
 import { IRep } from '../domain/IRep'
 
 export interface IFindRepresentativeItemProps {
@@ -16,7 +15,7 @@ const networkName = process.env.REACT_APP_ETH_NETWORK
 export const FindRepresentativeItem = (props: IFindRepresentativeItemProps) => {
   const bzrxAmount = props.representative.BZRX.div(10 ** 18)
   const vbzrxAmount = props.representative.vBZRX.div(10 ** 18)
-  //TODO: remove networkName
+  // TODO: remove networkName
   const bptAmount =
     networkName === 'kovan'
       ? props.representative.LPToken.div(10 ** 6)
