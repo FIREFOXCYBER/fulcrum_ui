@@ -2,7 +2,7 @@ import React from 'react'
 import FooterMenu from './FooterMenu'
 import FooterSocial from './FooterSocial'
 
-export default function Footer() {
+export function Footer() {
   return (
     <footer>
       <div className="container container-md">
@@ -14,3 +14,5 @@ export default function Footer() {
     </footer>
   )
 }
+
+export default React.memo(Footer)

@@ -8,7 +8,7 @@ export interface IHeaderMenuItemProps {
   external: boolean
 }
 
-export default function HeaderMenuItem (props: IHeaderMenuItemProps) {
+export function HeaderMenuItem(props: IHeaderMenuItemProps) {
   return (
     <React.Fragment>
       {props.external ? (
@@ -27,3 +27,5 @@ export default function HeaderMenuItem (props: IHeaderMenuItemProps) {
     </React.Fragment>
   )
 }
+
+export default React.memo(HeaderMenuItem)

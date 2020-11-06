@@ -1,6 +1,6 @@
 import Box from '3box'
 import { BigNumber } from '@0x/utils'
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import Modal from 'react-modal'
 import Representative1 from '../assets/images/representative1.png'
 import Representative2 from '../assets/images/representative2.png'
@@ -48,7 +48,7 @@ const networkName = process.env.REACT_APP_ETH_NETWORK
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
-export default class Form extends Component<{}, IFormState> {
+export default class Form extends PureComponent<{}, IFormState> {
   constructor(props: any) {
     super(props)
     this.state = {

@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import { RequestTask } from '../domain/RequestTask'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
 import stakingProvider from '../services/StakingProvider'
@@ -17,7 +17,7 @@ export interface ITxLoaderStepState {
   title: ITitle | null
 }
 
-export default class TxLoaderStep extends Component<ITxLoaderStepProps, ITxLoaderStepState> {
+export default class TxLoaderStep extends PureComponent<ITxLoaderStepProps, ITxLoaderStepState> {
   constructor(props: ITxLoaderStepProps) {
     super(props)
 
@@ -38,7 +38,7 @@ export default class TxLoaderStep extends Component<ITxLoaderStepProps, ITxLoade
   public componentDidMount(): void {
     this._isMounted = true
 
-    this.setState({ ...this.state, title: this.getTitle(this.state.requestTask) })
+    this.setState({ title: this.getTitle(this.state.requestTask) })
   }
 
   public componentWillUnmount(): void {

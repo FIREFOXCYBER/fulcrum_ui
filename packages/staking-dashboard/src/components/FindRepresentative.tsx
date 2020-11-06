@@ -1,4 +1,4 @@
-import React, { ChangeEvent, Component } from 'react'
+import React, { ChangeEvent, PureComponent } from 'react'
 import SimpleBar from 'simplebar-react'
 import 'simplebar/dist/simplebar.min.css'
 import { ReactComponent as CloseIcon } from '../assets/images/ic__close.svg'
@@ -17,7 +17,7 @@ interface IFindRepresentativeState {
   searchValue: string
 }
 
-export default class FindRepresentative extends Component<
+export default class FindRepresentative extends PureComponent<
   IFindRepresentativeProps,
   IFindRepresentativeState
 > {
@@ -31,7 +31,7 @@ export default class FindRepresentative extends Component<
 
   public getRepresentative = async () => {
     const representative = this.props.representative
-    this.setState({ ...this.state, representative: representative, searchValue: '' })
+    this.setState({ representative: representative, searchValue: '' })
   }
 
   public componentDidMount(): void {
@@ -86,6 +86,6 @@ export default class FindRepresentative extends Component<
 
   public onSearch = (event: ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value ? event.target.value : ''
-    this.setState({ ...this.state, searchValue: value.toLowerCase() })
+    this.setState({ searchValue: value.toLowerCase() })
   }
 }

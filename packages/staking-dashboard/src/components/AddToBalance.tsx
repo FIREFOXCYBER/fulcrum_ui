@@ -1,5 +1,5 @@
 import { BigNumber } from '@0x/utils'
-import React, { ChangeEvent, Component } from 'react'
+import React, { ChangeEvent, PureComponent } from 'react'
 import { ReactComponent as TokenBpt } from '../assets/images/token-bpt.svg'
 import { ReactComponent as TokenBzrx } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as TokenVBzrx } from '../assets/images/token-vbzrx.svg'
@@ -24,7 +24,7 @@ interface IAddToBalanceState {
 
 const networkName = process.env.REACT_APP_ETH_NETWORK
 
-export default class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceState> {
+export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAddToBalanceState> {
   constructor(props: any, context?: any) {
     super(props, context)
 
@@ -88,19 +88,20 @@ export default class AddToBalance extends Component<IAddToBalanceProps, IAddToBa
                   onChange={this.changeBzrxBalance}
                 />
                 <div className="line">
-                  <div/>
-                  <div/>
-                  <div/>
-                  <div/>
+                  <div />
+                  <div />
+                  <div />
+                  <div />
                 </div>
                 <div
                   className="progress"
                   style={{
                     width: `calc(100%*${this.state.bzrxBalance}/${this.props.bzrxMax})`
-                  }}/>
+                  }}
+                />
               </div>
               <label className="sign">BZRX</label>
-              <TokenBzrx className="token-logo"/>
+              <TokenBzrx className="token-logo" />
             </div>
           )}
           {this.props.vbzrxMax.gt(0) && (
@@ -124,20 +125,21 @@ export default class AddToBalance extends Component<IAddToBalanceProps, IAddToBa
                   onChange={this.changeVBzrxBalance}
                 />
                 <div className="line">
-                  <div/>
-                  <div/>
-                  <div/>
-                  <div/>
+                  <div />
+                  <div />
+                  <div />
+                  <div />
                 </div>
                 <div
                   className="progress"
                   style={{
                     width: `calc(100%*${this.state.vBzrxBalance}/${this.props.vbzrxMax})`
-                  }}/>
+                  }}
+                />
               </div>
               {/* <span>{this.numberWithCommas(this.state.vBzrxBalance)}</span> */}
               <label className="sign">vBZRX</label>
-              <TokenVBzrx className="token-logo"/>
+              <TokenVBzrx className="token-logo" />
             </div>
           )}
           {this.props.bptMax.gt(0) && (
@@ -161,20 +163,21 @@ export default class AddToBalance extends Component<IAddToBalanceProps, IAddToBa
                   onChange={this.changeBptBalance}
                 />
                 <div className="line">
-                  <div/>
-                  <div/>
-                  <div/>
-                  <div/>
+                  <div />
+                  <div />
+                  <div />
+                  <div />
                 </div>
                 <div
                   className="progress"
                   style={{
                     width: `calc(100%*${this.state.bptBalance}/${this.props.bptMax})`
-                  }}/>
+                  }}
+                />
               </div>
               {/* <span>{this.numberWithCommas(this.state.bptBalance)}</span> */}
               <label className="sign">BPT</label>
-              <TokenBpt className="token-logo"/>
+              <TokenBpt className="token-logo" />
             </div>
           )}
           <div className="group-buttons">

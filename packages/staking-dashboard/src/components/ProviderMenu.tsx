@@ -6,7 +6,7 @@ import { ProviderType } from '../domain/ProviderType'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import { injected } from '../domain/WalletConnectors'
 import stakingProvider from '../services/StakingProvider'
-import { ProviderMenuListItem } from './ProviderMenuListItem'
+import ProviderMenuListItem from './ProviderMenuListItem'
 
 export interface IProviderMenuProps {
   providerTypes: ProviderType[]
@@ -16,7 +16,7 @@ export interface IProviderMenuProps {
   onProviderMenuClose: () => void
 }
 
-export default function ProviderMenu(props: IProviderMenuProps) {
+export function ProviderMenu(props: IProviderMenuProps) {
   const context = useWeb3React()
   const { connector, account, activate, deactivate, active, error } = context
 
@@ -100,3 +100,5 @@ export default function ProviderMenu(props: IProviderMenuProps) {
     </div>
   )
 }
+
+export default React.memo(ProviderMenu)

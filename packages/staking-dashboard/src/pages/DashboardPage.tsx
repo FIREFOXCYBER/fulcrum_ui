@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 import Form from '../components/Form'
 import Header from '../layout/Header'
 
@@ -6,20 +6,14 @@ interface IDashboardPageProps {
   doNetworkConnect: () => void
   isMobileMedia: boolean
 }
-interface IDashboardPageState {}
 
-export default class DashboardPage extends Component<IDashboardPageProps, IDashboardPageState> {
-  public render() {
-    return (
-      <React.Fragment>
-        <section className="pb-50">
-          <Header
-            isMobileMedia={this.props.isMobileMedia}
-            doNetworkConnect={this.props.doNetworkConnect}
-          />
-          <Form />
-        </section>
-      </React.Fragment>
-    )
-  }
+export function DashboardPage(props: IDashboardPageProps) {
+  return (
+    <section className="pb-50">
+      <Header isMobileMedia={props.isMobileMedia} doNetworkConnect={props.doNetworkConnect} />
+      <Form />
+    </section>
+  )
 }
+
+export default React.memo(DashboardPage)

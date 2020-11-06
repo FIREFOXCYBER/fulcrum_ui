@@ -11,7 +11,7 @@ interface IFooterSocialProps {
   isShowSocial: boolean
 }
 
-export default function FooterSocial (props: IFooterSocialProps) {
+export function FooterSocial(props: IFooterSocialProps) {
   return (
     <div className="footer-social">
       {props.isShowSocial && (
@@ -60,3 +60,5 @@ export default function FooterSocial (props: IFooterSocialProps) {
     </div>
   )
 }
+
+export default React.memo(FooterSocial)

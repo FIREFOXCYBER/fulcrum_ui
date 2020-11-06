@@ -1,6 +1,6 @@
 import React, { MouseEvent } from 'react'
 
-export default function FooterMenu () {
+export function FooterMenu() {
   const contactClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault()
     // @ts-ignore
@@ -49,3 +49,5 @@ export default function FooterMenu () {
     </div>
   )
 }
+
+export default React.memo(FooterMenu)

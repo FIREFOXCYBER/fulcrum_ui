@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types'
-import { Component } from 'react'
+import { PureComponent } from 'react'
 
 export interface ILocationListenerProps {
   doNetworkConnect: (destinationAbbr: string) => void
 }
 
-export default class LocationListener extends Component<ILocationListenerProps> {
+export default class LocationListener extends PureComponent<ILocationListenerProps> {
   public static contextTypes = {
     router: PropTypes.object
   }

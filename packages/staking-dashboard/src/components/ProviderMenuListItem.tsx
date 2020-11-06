@@ -76,3 +76,5 @@ export function ProviderMenuListItem(props: IProviderMenuListItemProps) {
     </li>
   )
 }
+
+export default React.memo(ProviderMenuListItem)

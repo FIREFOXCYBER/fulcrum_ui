@@ -3,7 +3,7 @@ import { Web3Wrapper } from '@0x/web3-wrapper'
 import { AbstractConnector } from '@web3-react/abstract-connector'
 import { Web3ReactProvider } from '@web3-react/core'
 import { ConnectorEvent, ConnectorUpdate } from '@web3-react/types'
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import TagManager from 'react-gtm-module'
 import Intercom from 'react-intercom'
 import Modal from 'react-modal'
@@ -45,7 +45,7 @@ interface IAppRouterState {
   isMobileMedia: boolean
 }
 
-export default class AppRouter extends Component<any, IAppRouterState> {
+export default class AppRouter extends PureComponent<any, IAppRouterState> {
   private _isMounted: boolean = false
 
   constructor(props: any) {

@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import { ProviderType } from '../domain/ProviderType'
 import { ProviderTypeDetails } from '../domain/ProviderTypeDetails'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
@@ -18,7 +18,7 @@ interface IOnChainIndicatorState {
   providerTypeDetails: ProviderTypeDetails | null
 }
 
-export default class OnChainIndicator extends Component<
+export default class OnChainIndicator extends PureComponent<
   IOnChainIndicatorProps,
   IOnChainIndicatorState
 > {
@@ -53,20 +53,20 @@ export default class OnChainIndicator extends Component<
         ...this.state,
         isLoading: true
       })
-    await this.derivedUpdate()
+    this.derivedUpdate()
   }
 
   public async componentDidMount() {
     this._isMounted = true
-    await this.derivedUpdate()
+    this.derivedUpdate()
   }
 
   public componentWillUnmount(): void {
     this._isMounted = false
-    stakingProvider.removeListener(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.off(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
   }
 
-  private async derivedUpdate() {
+  private derivedUpdate() {
     const accountText =
       stakingProvider.accounts.length > 0 && stakingProvider.accounts[0]
         ? stakingProvider.accounts[0].toLowerCase()
@@ -141,51 +141,47 @@ export default class OnChainIndicator extends Component<
     walletAddressText: string
   ) {
     if (isLoading) {
+      return <span className="on-chain-indicator__provider-txt">Loading Wallet...</span>
+    }
+
+    if (providerTypeDetails !== null && providerTypeDetails.reactLogoSvgShort !== null) {
       return (
         <React.Fragment>
-          <span className="on-chain-indicator__provider-txt">Loading Wallet...</span>
-        </React.Fragment>
-      )
-    } else {
-      if (providerTypeDetails !== null && providerTypeDetails.reactLogoSvgShort !== null) {
-        return (
-          <React.Fragment>
-            <div className="on-chain-indicator__svg">
-              {providerTypeDetails.reactLogoSvgShort.render()}
-            </div>
-            <div className="on-chain-indicator__description">
-              <span>{providerTypeDetails.displayName}</span>
-              {walletAddressText ? (
-                isSupportedNetwork && accountText && etherscanURL ? (
-                  <a
-                    className="on-chain-indicator__wallet-address"
-                    href={`${etherscanURL}address/${accountText}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(event) => event.stopPropagation()}>
-                    {walletAddressText}
-                  </a>
-                ) : (
-                  <span className="on-chain-indicator__wallet-address">{walletAddressText}</span>
-                )
+          <div className="on-chain-indicator__svg">
+            {providerTypeDetails.reactLogoSvgShort.render()}
+          </div>
+          <div className="on-chain-indicator__description">
+            <span>{providerTypeDetails.displayName}</span>
+            {walletAddressText ? (
+              isSupportedNetwork && accountText && etherscanURL ? (
+                <a
+                  className="on-chain-indicator__wallet-address"
+                  href={`${etherscanURL}address/${accountText}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => event.stopPropagation()}>
+                  {walletAddressText}
+                </a>
               ) : (
-                ``
-              )}
-            </div>
-          </React.Fragment>
-        )
-      } else {
-        return (
-          <React.Fragment>
-            <span className="on-chain-indicator__provider-txt">Click To Connect Wallet</span>
-            {stakingProvider.unsupportedNetwork ? (
-              <span className="on-chain-indicator__wallet-address">{walletAddressText}</span>
+                <span className="on-chain-indicator__wallet-address">{walletAddressText}</span>
+              )
             ) : (
               ``
             )}
-          </React.Fragment>
-        )
-      }
+          </div>
+        </React.Fragment>
+      )
     }
+
+    return (
+      <React.Fragment>
+        <span className="on-chain-indicator__provider-txt">Click To Connect Wallet</span>
+        {stakingProvider.unsupportedNetwork ? (
+          <span className="on-chain-indicator__wallet-address">{walletAddressText}</span>
+        ) : (
+          ``
+        )}
+      </React.Fragment>
+    )
   }
 }

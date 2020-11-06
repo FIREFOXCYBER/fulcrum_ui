@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 
 interface ILoaderProps {
   quantityDots: number
@@ -8,7 +8,7 @@ interface ILoaderProps {
   isWarningTitle?: boolean
 }
 
-export default class Loader extends Component<ILoaderProps> {
+export default class Loader extends PureComponent<ILoaderProps> {
   public constructor(props: ILoaderProps, context?: any) {
     super(props, context)
   }
@@ -21,7 +21,8 @@ export default class Loader extends Component<ILoaderProps> {
         <span
           key={i}
           className={`${this.props.sizeDots}-dots`}
-          style={{ animationDuration: `${animationDuration}s` }}/>
+          style={{ animationDuration: `${animationDuration}s` }}
+        />
       )
     }
     return wrapperDots
@@ -31,7 +32,7 @@ export default class Loader extends Component<ILoaderProps> {
     return (
       <React.Fragment>
         <div className="loader">
-          {this.props.isOverlay ? <div className="loader-wrapper"/> : null}
+          {this.props.isOverlay ? <div className="loader-wrapper" /> : null}
           <div className={`${this.props.isOverlay ? `loader-overlay` : ``}`}>
             <div className={`loader-content loader-content-${this.props.sizeDots}`}>
               {this.props.title.length !== 0 ? (

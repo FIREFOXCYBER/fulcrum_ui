@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React, { PureComponent } from 'react'
 import { Link } from 'react-router-dom'
 import { ReactComponent as LogoSign } from '../assets/images/logo-sign.svg'
 import { ReactComponent as LogoStaking } from '../assets/images/logo-staking.svg'
@@ -16,7 +16,7 @@ interface IHeaderState {
   isMenuOpen: boolean
 }
 
-export default class Header extends Component<IHeaderProps, IHeaderState> {
+export default class Header extends PureComponent<IHeaderProps, IHeaderState> {
   constructor(props: IHeaderProps) {
     super(props)
     this.state = {
@@ -117,7 +117,7 @@ export default class Header extends Component<IHeaderProps, IHeaderState> {
   }
 
   private onMenuToggle = () => {
-    this.setState({ ...this.state, isMenuOpen: !this.state.isMenuOpen })
+    this.setState({ isMenuOpen: !this.state.isMenuOpen })
   }
 
   public removeOverflow = () => {
