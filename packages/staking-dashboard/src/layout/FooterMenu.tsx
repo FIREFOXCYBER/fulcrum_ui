@@ -1,5 +1,6 @@
 import React, { MouseEvent } from 'react'
-export const FooterMenu = () => {
+
+export default function FooterMenu () {
   const contactClick = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault()
     // @ts-ignore

@@ -3,7 +3,7 @@ import React from 'react'
 import { ProviderType } from '../domain/ProviderType'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import stakingProvider from '../services/StakingProvider'
-import { Loader } from './Loader'
+import Loader from './Loader'
 
 export interface IProviderMenuListItemProps {
   providerType: ProviderType

@@ -1,8 +1,8 @@
 import React from 'react'
-import { FooterMenu } from './FooterMenu'
-import { FooterSocial } from './FooterSocial'
+import FooterMenu from './FooterMenu'
+import FooterSocial from './FooterSocial'
 
-export const Footer = () => {
+export default function Footer() {
   return (
     <footer>
       <div className="container container-md">

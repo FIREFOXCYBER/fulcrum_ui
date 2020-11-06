@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Lottie from 'react-lottie'
 import stakingProvider from '../services/StakingProvider'
-import { TxLoaderStep } from './TxLoaderStep'
+import TxLoaderStep from './TxLoaderStep'
 
 import animationData from '../config/animation-tx.json'
 
@@ -11,7 +11,7 @@ interface IAnimationTxState {
   txHash: string
 }
 
-export class AnimationTx extends Component<IAnimationTxProps, IAnimationTxState> {
+export default class AnimationTx extends Component<IAnimationTxProps, IAnimationTxState> {
   constructor(props: IAnimationTxProps) {
     super(props)
     this.state = {

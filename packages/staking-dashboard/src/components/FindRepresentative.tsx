@@ -3,7 +3,7 @@ import SimpleBar from 'simplebar-react'
 import 'simplebar/dist/simplebar.min.css'
 import { ReactComponent as CloseIcon } from '../assets/images/ic__close.svg'
 import { ReactComponent as Search } from '../assets/images/icon-search.svg'
-import { FindRepresentativeItem } from '../components/FindRepresentativeItem'
+import FindRepresentativeItem from '../components/FindRepresentativeItem'
 import { IRep } from '../domain/IRep'
 
 export interface IFindRepresentativeProps {
@@ -17,7 +17,7 @@ interface IFindRepresentativeState {
   searchValue: string
 }
 
-export class FindRepresentative extends Component<
+export default class FindRepresentative extends Component<
   IFindRepresentativeProps,
   IFindRepresentativeState
 > {

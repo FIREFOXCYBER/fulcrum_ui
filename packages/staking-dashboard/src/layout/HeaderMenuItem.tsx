@@ -8,7 +8,7 @@ export interface IHeaderMenuItemProps {
   external: boolean
 }
 
-export const HeaderMenuItem = (props: IHeaderMenuItemProps) => {
+export default function HeaderMenuItem (props: IHeaderMenuItemProps) {
   return (
     <React.Fragment>
       {props.external ? (

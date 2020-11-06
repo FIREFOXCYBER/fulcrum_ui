@@ -16,7 +16,7 @@ export interface IProviderMenuProps {
   onProviderMenuClose: () => void
 }
 
-export const ProviderMenu = (props: IProviderMenuProps) => {
+export default function ProviderMenu(props: IProviderMenuProps) {
   const context = useWeb3React()
   const { connector, account, activate, deactivate, active, error } = context
 

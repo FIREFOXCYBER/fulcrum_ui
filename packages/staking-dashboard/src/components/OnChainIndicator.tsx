@@ -18,7 +18,10 @@ interface IOnChainIndicatorState {
   providerTypeDetails: ProviderTypeDetails | null
 }
 
-export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChainIndicatorState> {
+export default class OnChainIndicator extends Component<
+  IOnChainIndicatorProps,
+  IOnChainIndicatorState
+> {
   constructor(props: IOnChainIndicatorProps) {
     super(props)
 
@@ -30,10 +33,7 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
       providerTypeDetails: null
     }
 
-    stakingProvider.on(
-      StakingProviderEvents.ProviderIsChanging,
-      this.onProviderIsChanging
-    )
+    stakingProvider.on(StakingProviderEvents.ProviderIsChanging, this.onProviderIsChanging)
 
     stakingProvider.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
   }
@@ -63,10 +63,7 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
 
   public componentWillUnmount(): void {
     this._isMounted = false
-    stakingProvider.removeListener(
-      StakingProviderEvents.ProviderChanged,
-      this.onProviderChanged
-    )
+    stakingProvider.removeListener(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
   }
 
   private async derivedUpdate() {

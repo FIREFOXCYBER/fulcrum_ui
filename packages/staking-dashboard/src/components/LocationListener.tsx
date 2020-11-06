@@ -5,7 +5,7 @@ export interface ILocationListenerProps {
   doNetworkConnect: (destinationAbbr: string) => void
 }
 
-export class LocationListener extends Component<ILocationListenerProps> {
+export default class LocationListener extends Component<ILocationListenerProps> {
   public static contextTypes = {
     router: PropTypes.object
   }

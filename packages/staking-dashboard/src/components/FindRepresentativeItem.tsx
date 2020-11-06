@@ -12,7 +12,7 @@ export interface IFindRepresentativeItemProps {
 
 const networkName = process.env.REACT_APP_ETH_NETWORK
 
-export const FindRepresentativeItem = (props: IFindRepresentativeItemProps) => {
+export default function FindRepresentativeItem(props: IFindRepresentativeItemProps) {
   const bzrxAmount = props.representative.BZRX.div(10 ** 18)
   const vbzrxAmount = props.representative.vBZRX.div(10 ** 18)
   // TODO: remove networkName

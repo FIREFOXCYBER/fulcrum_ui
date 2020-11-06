@@ -11,7 +11,7 @@ interface IFooterSocialProps {
   isShowSocial: boolean
 }
 
-export const FooterSocial = (props: IFooterSocialProps) => {
+export default function FooterSocial (props: IFooterSocialProps) {
   return (
     <div className="footer-social">
       {props.isShowSocial && (

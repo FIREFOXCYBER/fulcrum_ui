@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { Form } from '../components/Form'
-import { Header } from '../layout/Header'
+import Form from '../components/Form'
+import Header from '../layout/Header'
 
 interface IDashboardPageProps {
   doNetworkConnect: () => void
@@ -8,7 +8,7 @@ interface IDashboardPageProps {
 }
 interface IDashboardPageState {}
 
-export class DashboardPage extends Component<IDashboardPageProps, IDashboardPageState> {
+export default class DashboardPage extends Component<IDashboardPageProps, IDashboardPageState> {
   public render() {
     return (
       <React.Fragment>

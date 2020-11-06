@@ -17,7 +17,7 @@ export interface ITxLoaderStepState {
   title: ITitle | null
 }
 
-export class TxLoaderStep extends Component<ITxLoaderStepProps, ITxLoaderStepState> {
+export default class TxLoaderStep extends Component<ITxLoaderStepProps, ITxLoaderStepState> {
   constructor(props: ITxLoaderStepProps) {
     super(props)
 

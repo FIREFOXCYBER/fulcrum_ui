@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import { TableGrid } from '../components/TableGrid'
-import { Header } from '../layout/Header'
+import TableGrid from '../components/TableGrid'
+import Header from '../layout/Header'
 
 interface ITransactionsPageProps {
   doNetworkConnect: () => void

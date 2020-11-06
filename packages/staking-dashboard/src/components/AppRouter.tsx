@@ -12,13 +12,13 @@ import configProviders from '../config/providers.json'
 import { ProviderType } from '../domain/ProviderType'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
-import { Footer } from '../layout/Footer'
-import { DashboardPage } from '../pages/DashboardPage'
+import Footer from '../layout/Footer'
+import DashboardPage from '../pages/DashboardPage'
 import { ProviderChangedEvent } from '../services/events/ProviderChangedEvent'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
 import stakingProvider from '../services/StakingProvider'
-import { LocationListener } from './LocationListener'
-import { ProviderMenu } from './ProviderMenu'
+import LocationListener from './LocationListener'
+import ProviderMenu from './ProviderMenu'
 
 const isMainnetProd =
   process.env.NODE_ENV &&
@@ -45,7 +45,7 @@ interface IAppRouterState {
   isMobileMedia: boolean
 }
 
-export class AppRouter extends Component<any, IAppRouterState> {
+export default class AppRouter extends Component<any, IAppRouterState> {
   private _isMounted: boolean = false
 
   constructor(props: any) {

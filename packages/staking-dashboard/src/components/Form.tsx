@@ -19,9 +19,9 @@ import { RequestTask } from '../domain/RequestTask'
 import { StakingRequest } from '../domain/StakingRequest'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
 import stakingProvider from '../services/StakingProvider'
-import { AddToBalance } from './AddToBalance'
-import { AnimationTx } from './AnimationTx'
-import { FindRepresentative } from './FindRepresentative'
+import AddToBalance from './AddToBalance'
+import AnimationTx from './AnimationTx'
+import FindRepresentative from './FindRepresentative'
 
 interface IFormState {
   bzrxV1Balance: BigNumber
@@ -48,7 +48,7 @@ const networkName = process.env.REACT_APP_ETH_NETWORK
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
-export class Form extends Component<{}, IFormState> {
+export default class Form extends Component<{}, IFormState> {
   constructor(props: any) {
     super(props)
     this.state = {

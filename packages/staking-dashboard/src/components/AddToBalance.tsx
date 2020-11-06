@@ -24,7 +24,7 @@ interface IAddToBalanceState {
 
 const networkName = process.env.REACT_APP_ETH_NETWORK
 
-export class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceState> {
+export default class AddToBalance extends Component<IAddToBalanceProps, IAddToBalanceState> {
   constructor(props: any, context?: any) {
     super(props, context)
 

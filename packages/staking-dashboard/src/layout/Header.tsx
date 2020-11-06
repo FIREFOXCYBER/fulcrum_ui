@@ -4,8 +4,8 @@ import { ReactComponent as LogoSign } from '../assets/images/logo-sign.svg'
 import { ReactComponent as LogoStaking } from '../assets/images/logo-staking.svg'
 import { ReactComponent as MenuIconClose } from '../assets/images/menu-close.svg'
 import { ReactComponent as MenuIconOpen } from '../assets/images/menu-open.svg'
-import { OnChainIndicator } from '../components/OnChainIndicator'
-import { FooterSocial } from './FooterSocial'
+import OnChainIndicator from '../components/OnChainIndicator'
+import FooterSocial from './FooterSocial'
 
 interface IHeaderProps {
   doNetworkConnect: () => void
@@ -16,7 +16,7 @@ interface IHeaderState {
   isMenuOpen: boolean
 }
 
-export class Header extends Component<IHeaderProps, IHeaderState> {
+export default class Header extends Component<IHeaderProps, IHeaderState> {
   constructor(props: IHeaderProps) {
     super(props)
     this.state = {
@@ -49,7 +49,6 @@ export class Header extends Component<IHeaderProps, IHeaderState> {
                 <LogoStaking />
               </div>
             </Link>
-            {/*<HeaderMenu />*/}
             <div className="flex ai-c header-right">
               <a
                 href="https://help.bzx.network/en/"

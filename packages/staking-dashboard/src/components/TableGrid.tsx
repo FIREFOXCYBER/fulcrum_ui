@@ -1,11 +1,11 @@
 import React, { Component } from 'react'
-import { TableRow } from './TableRow'
+import TableRow from './TableRow'
 
 interface ITableGridProps {
   isMobileMedia: boolean
 }
 
-export class TableGrid extends Component<ITableGridProps> {
+export default class TableGrid extends Component<ITableGridProps> {
   constructor(props: any) {
     super(props)
   }

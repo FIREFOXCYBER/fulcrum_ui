@@ -8,10 +8,11 @@ interface ILoaderProps {
   isWarningTitle?: boolean
 }
 
-export class Loader extends Component<ILoaderProps> {
+export default class Loader extends Component<ILoaderProps> {
   public constructor(props: ILoaderProps, context?: any) {
     super(props, context)
   }
+
   public renderDots = () => {
     const animationDuration = 0.35 * this.props.quantityDots
     const wrapperDots = []

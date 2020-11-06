@@ -1,8 +1,9 @@
 import React, { Component } from 'react'
-import { HeaderMenuItem, IHeaderMenuItemProps } from './HeaderMenuItem'
+import HeaderMenuItem, { IHeaderMenuItemProps } from './HeaderMenuItem'
 
 export interface IHeaderMenuProps {}
-export class HeaderMenu extends Component<IHeaderMenuProps> {
+
+export default class HeaderMenu extends Component<IHeaderMenuProps> {
   public render() {
     const itemsMenu = [
       { id: 1, title: 'Dashboard', link: '/', external: false }

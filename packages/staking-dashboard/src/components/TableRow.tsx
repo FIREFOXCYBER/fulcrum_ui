@@ -4,7 +4,7 @@ interface ITableRowProps {
   isMobileMedia: boolean
 }
 
-export class TableRow extends Component<ITableRowProps> {
+export default class TableRow extends Component<ITableRowProps> {
   constructor(props: any) {
     super(props)
   }
