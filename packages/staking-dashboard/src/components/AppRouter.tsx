@@ -47,6 +47,7 @@ interface IAppRouterState {
 
 export class AppRouter extends Component<any, IAppRouterState> {
   private _isMounted: boolean = false
+
   constructor(props: any) {
     super(props)
     this.state = {
@@ -56,17 +57,18 @@ export class AppRouter extends Component<any, IAppRouterState> {
       web3: stakingProvider.web3Wrapper,
       isMobileMedia: false
     }
-    stakingProvider.eventEmitter.on(
+    stakingProvider.on(
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )
   }
+
   public async onConnectorUpdated(update: ConnectorUpdate) {
-    stakingProvider.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
+    stakingProvider.emit(StakingProviderEvents.ProviderIsChanging)
 
     await Web3ConnectionFactory.updateConnector(update)
     await stakingProvider.setWeb3ProviderFinalize(stakingProvider.providerType)
-    stakingProvider.eventEmitter.emit(
+    stakingProvider.emit(
       StakingProviderEvents.ProviderChanged,
       new ProviderChangedEvent(
         stakingProvider.providerType,
@@ -77,7 +79,7 @@ export class AppRouter extends Component<any, IAppRouterState> {
 
   public onDeactivate = async () => {
     stakingProvider.isLoading = true
-    stakingProvider.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
+    stakingProvider.emit(StakingProviderEvents.ProviderIsChanging)
     if (!this._isMounted) {
       return
     }
@@ -90,7 +92,7 @@ export class AppRouter extends Component<any, IAppRouterState> {
     await stakingProvider.setReadonlyWeb3Provider()
 
     stakingProvider.isLoading = false
-    stakingProvider.eventEmitter.emit(
+    stakingProvider.emit(
       StakingProviderEvents.ProviderChanged,
       new ProviderChangedEvent(
         stakingProvider.providerType,
@@ -103,7 +105,7 @@ export class AppRouter extends Component<any, IAppRouterState> {
     console.log('onProviderTypeSelect')
     if (!this.state.isLoading) {
       stakingProvider.isLoading = true
-      stakingProvider.eventEmitter.emit(StakingProviderEvents.ProviderIsChanging)
+      stakingProvider.emit(StakingProviderEvents.ProviderIsChanging)
 
       if (!this._isMounted) {
         return
@@ -119,7 +121,7 @@ export class AppRouter extends Component<any, IAppRouterState> {
 
           stakingProvider.isLoading = false
 
-          stakingProvider.eventEmitter.emit(
+          stakingProvider.emit(
             StakingProviderEvents.ProviderChanged,
             new ProviderChangedEvent(
               stakingProvider.providerType,
@@ -157,7 +159,7 @@ export class AppRouter extends Component<any, IAppRouterState> {
 
   public componentWillUnmount(): void {
     this._isMounted = false
-    stakingProvider.eventEmitter.removeListener(
+    stakingProvider.removeListener(
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )

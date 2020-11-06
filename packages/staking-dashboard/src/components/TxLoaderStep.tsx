@@ -26,7 +26,7 @@ export class TxLoaderStep extends Component<ITxLoaderStepProps, ITxLoaderStepSta
       title: { message: 'Loading', isWarning: false }
     }
 
-    stakingProvider.eventEmitter.on(StakingProviderEvents.TaskChanged, this.onTaskChanged)
+    stakingProvider.on(StakingProviderEvents.TaskChanged, this.onTaskChanged)
     this.stepDiv = React.createRef()
     this._isMounted = false
   }
@@ -44,7 +44,7 @@ export class TxLoaderStep extends Component<ITxLoaderStepProps, ITxLoaderStepSta
   public componentWillUnmount(): void {
     this._isMounted = false
 
-    stakingProvider.eventEmitter.off(StakingProviderEvents.TaskChanged, this.onTaskChanged)
+    stakingProvider.off(StakingProviderEvents.TaskChanged, this.onTaskChanged)
   }
 
   public getTitle = (requestTask: RequestTask | undefined) => {

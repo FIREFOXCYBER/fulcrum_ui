@@ -73,19 +73,10 @@ export class Form extends Component<{}, IFormState> {
     }
 
     this._isMounted = false
-    stakingProvider.eventEmitter.on(
-      StakingProviderEvents.ProviderAvailable,
-      this.onProviderAvailable
-    )
-    stakingProvider.eventEmitter.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
-    stakingProvider.eventEmitter.on(
-      StakingProviderEvents.AskToOpenProgressDlg,
-      this.onAskToOpenProgressDlg
-    )
-    stakingProvider.eventEmitter.on(
-      StakingProviderEvents.AskToCloseProgressDlg,
-      this.onAskToCloseProgressDlg
-    )
+    stakingProvider.on(StakingProviderEvents.ProviderAvailable, this.onProviderAvailable)
+    stakingProvider.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.on(StakingProviderEvents.AskToOpenProgressDlg, this.onAskToOpenProgressDlg)
+    stakingProvider.on(StakingProviderEvents.AskToCloseProgressDlg, this.onAskToCloseProgressDlg)
   }
 
   private isAlreadyRepresentative: boolean = false
@@ -189,19 +180,10 @@ export class Form extends Component<{}, IFormState> {
   public componentWillUnmount(): void {
     this._isMounted = false
 
-    stakingProvider.eventEmitter.off(
-      StakingProviderEvents.ProviderAvailable,
-      this.onProviderAvailable
-    )
-    stakingProvider.eventEmitter.off(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
-    stakingProvider.eventEmitter.off(
-      StakingProviderEvents.AskToOpenProgressDlg,
-      this.onAskToOpenProgressDlg
-    )
-    stakingProvider.eventEmitter.off(
-      StakingProviderEvents.AskToCloseProgressDlg,
-      this.onAskToCloseProgressDlg
-    )
+    stakingProvider.off(StakingProviderEvents.ProviderAvailable, this.onProviderAvailable)
+    stakingProvider.off(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.off(StakingProviderEvents.AskToOpenProgressDlg, this.onAskToOpenProgressDlg)
+    stakingProvider.off(StakingProviderEvents.AskToCloseProgressDlg, this.onAskToCloseProgressDlg)
   }
 
   public onBzrxV1ToV2ConvertClick = async () => {

@@ -42,7 +42,7 @@ const getNetworkIdByString = (networkName: string | undefined) => {
 
 const initialNetworkId = getNetworkIdByString(INITIAL_NETWORK)
 
-export class StakingProvider {
+export class StakingProvider extends EventEmitter {
   public static Instance: StakingProvider
 
   public readonly gasLimit = '500000'
@@ -51,7 +51,6 @@ export class StakingProvider {
   public readonly gasBufferCoeff = new BigNumber('1.03')
   // 5000ms
   public readonly successDisplayTimeout = 5000
-  public readonly eventEmitter: EventEmitter
   public providerType: ProviderType = ProviderType.None
   public providerEngine: Web3ProviderEngine | null = null
   public web3Wrapper: Web3Wrapper | null = null
@@ -65,9 +64,9 @@ export class StakingProvider {
   public readonly UNLIMITED_ALLOWANCE_IN_BASE_UNITS = new BigNumber(2).pow(256).minus(1)
 
   constructor() {
+    super()
     // init
-    this.eventEmitter = new EventEmitter()
-    this.eventEmitter.setMaxListeners(1000)
+    this.setMaxListeners(1000)
 
     // TasksQueue.Instance.on(TasksQueueEvents.Enqueued, this.onTaskEnqueued);
 
@@ -76,8 +75,6 @@ export class StakingProvider {
 
     this.web3ProviderSettings = this.getWeb3ProviderSettings(initialNetworkId)
     if (!providerType || providerType === ProviderType.None) {
-      // this.isLoading = true;
-      // setting up readonly provider
       this.web3ProviderSettings = this.getWeb3ProviderSettings(initialNetworkId)
       Web3ConnectionFactory.setReadonlyProvider()
         .then(() => {
@@ -97,7 +94,7 @@ export class StakingProvider {
                 this.web3Wrapper = web3Wrapper
                 this.providerEngine = engine
                 this.contractsSource = contractsSource
-                this.eventEmitter.emit(StakingProviderEvents.ProviderAvailable)
+                this.emit(StakingProviderEvents.ProviderAvailable)
               })
               .catch((err) => {
                 // TODO: actually handle error
@@ -1015,8 +1012,8 @@ export class StakingProvider {
   public processRequestTask = async (task: RequestTask) => {
     try {
       this.requestTask = task
-      task.setEventEmitter(this.eventEmitter)
-      this.eventEmitter.emit(StakingProviderEvents.AskToOpenProgressDlg, task)
+      task.setEventEmitter(this)
+      this.emit(StakingProviderEvents.AskToOpenProgressDlg, task)
       if (!(this.web3Wrapper && this.contractsSource && this.contractsSource.canWrite)) {
         throw new Error('No provider available!')
       }
@@ -1085,7 +1082,7 @@ export class StakingProvider {
       }
       task.processingEnd(false, false, err)
     } finally {
-      this.eventEmitter.emit(StakingProviderEvents.AskToCloseProgressDlg, task)
+      this.emit(StakingProviderEvents.AskToCloseProgressDlg, task)
     }
     return false
   }

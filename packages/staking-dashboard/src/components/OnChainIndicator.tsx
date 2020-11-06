@@ -30,12 +30,12 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
       providerTypeDetails: null
     }
 
-    stakingProvider.eventEmitter.on(
+    stakingProvider.on(
       StakingProviderEvents.ProviderIsChanging,
       this.onProviderIsChanging
     )
 
-    stakingProvider.eventEmitter.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
   }
   private _isMounted: boolean = false
 
@@ -63,7 +63,7 @@ export class OnChainIndicator extends Component<IOnChainIndicatorProps, IOnChain
 
   public componentWillUnmount(): void {
     this._isMounted = false
-    stakingProvider.eventEmitter.removeListener(
+    stakingProvider.removeListener(
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )
