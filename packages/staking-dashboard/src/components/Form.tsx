@@ -8,7 +8,6 @@ import Representative3 from '../assets/images/representative3.png'
 import { ReactComponent as BPTIcon } from '../assets/images/token-bpt.svg'
 import { ReactComponent as BzrxIcon } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as VBzrxIcon } from '../assets/images/token-vbzrx.svg'
-import { Asset } from '../domain/Asset'
 import { BecomeRepresentativeRequest } from '../domain/BecomeRepresentativeRequest'
 import { ClaimReabteRewardsRequest } from '../domain/ClaimReabteRewardsRequest'
 import { ClaimRequest } from '../domain/ClaimRequest'
@@ -87,35 +86,13 @@ export default class Form extends PureComponent<{}, IFormState> {
     let selectedRepAddress = ''
     this.isAlreadyRepresentative = await stakingProvider.checkIsRep()
 
-    const bzrxV1Balance = (await stakingProvider.getAssetTokenBalanceOfUser(Asset.BZRXv1)).div(
-      10 ** 18
-    )
-    const bzrxBalance = (await stakingProvider.stakeableByAsset(Asset.BZRX)).div(10 ** 18)
-    const vBzrxBalance = (await stakingProvider.stakeableByAsset(Asset.vBZRX)).div(10 ** 18)
-    // TODO: remove networkName
-    const bptBalance =
-      networkName === 'kovan'
-        ? (await stakingProvider.stakeableByAsset(Asset.BPT)).div(10 ** 6)
-        : (await stakingProvider.stakeableByAsset(Asset.BPT)).div(10 ** 18)
+    const userBalances = await stakingProvider.getUserBalances(networkName)
 
-    const bzrxStakingBalance = (await stakingProvider.balanceOfByAsset(Asset.BZRX)).div(10 ** 18)
-    const vBzrxStakingBalance = (await stakingProvider.balanceOfByAsset(Asset.vBZRX)).div(10 ** 18)
-    // TODO: remove networkName
-    const bptStakingBalance =
-      networkName === 'kovan'
-        ? (await stakingProvider.balanceOfByAsset(Asset.BPT)).div(10 ** 6)
-        : (await stakingProvider.balanceOfByAsset(Asset.BPT)).div(10 ** 18)
-    this._isMounted &&
-      this.setState({
-        ...this.state,
-        bzrxV1Balance,
-        bzrxBalance,
-        vBzrxBalance,
-        bptBalance: bptBalance,
-        bzrxStakingBalance,
-        vBzrxStakingBalance,
-        bptStakingBalance
-      })
+    if (!this._isMounted) {
+      return
+    }
+
+    this.setState({ ...this.state, ...userBalances })
 
     const repsList = ((await stakingProvider.getRepresentatives()) as IRep[]).map((rep, i) => {
       rep.index = i

@@ -238,6 +238,48 @@ export class StakingProvider extends EventEmitter {
     this.isLoading = false
   }
 
+
+  public getUserBalances = async (networkName?: string) => {
+    if ([ProviderType.None, ProviderType.Alchemy].includes(this.providerType)) {
+      return {
+        bzrxV1Balance: new BigNumber(0),
+        bzrxBalance: new BigNumber(0),
+        vBzrxBalance: new BigNumber(0),
+        bptBalance: new BigNumber(0),
+        bzrxStakingBalance: new BigNumber(0),
+        vBzrxStakingBalance: new BigNumber(0),
+        bptStakingBalance: new BigNumber(0)
+      }
+    }
+    const otherDivider = networkName === 'kovan' ? 10 ** 6 : 10 ** 18
+    const [
+      bzrxV1Balance,
+      bzrxBalance,
+      vBzrxBalance,
+      bptBalance,
+      bzrxStakingBalance,
+      vBzrxStakingBalance,
+      bptStakingBalance
+    ] = await Promise.all([
+      this.getAssetTokenBalanceOfUser(Asset.BZRXv1),
+      this.stakeableByAsset(Asset.BZRX),
+      this.stakeableByAsset(Asset.vBZRX),
+      this.stakeableByAsset(Asset.BPT),
+      this.balanceOfByAsset(Asset.BZRX),
+      this.balanceOfByAsset(Asset.vBZRX),
+      this.balanceOfByAsset(Asset.BPT)
+    ])
+    return {
+      bzrxV1Balance: bzrxV1Balance.div(10 ** 18),
+      bzrxBalance: bzrxBalance.div(10 ** 18),
+      vBzrxBalance: vBzrxBalance.div(10 ** 18),
+      bptBalance: bptBalance.div(otherDivider),
+      bzrxStakingBalance: bzrxStakingBalance.div(10 ** 18),
+      vBzrxStakingBalance: vBzrxStakingBalance.div(10 ** 18),
+      bptStakingBalance: bptStakingBalance.div(otherDivider)
+    }
+  }
+
   public getWeb3ProviderSettings(networkId: number | null): IWeb3ProviderSettings {
     let networkName
     let etherscanURL
@@ -999,14 +1041,7 @@ export class StakingProvider extends EventEmitter {
   public onRequestConfirmed = async (
     request: StakingRequest | ConvertRequest | ClaimRequest | BecomeRepresentativeRequest
   ) => {
-    if (request) {
-      try {
-        await this.processRequestTask(new RequestTask(request))
-      } catch (err) {
-        // TODO: handle error
-        console.error(err)
-      }
-    }
+    return this.processRequestTask(new RequestTask(request))
   }
 
   public processRequestTask = async (task: RequestTask) => {
