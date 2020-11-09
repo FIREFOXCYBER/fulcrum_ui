@@ -4,11 +4,9 @@ import { AbstractConnector } from '@web3-react/abstract-connector'
 import { Web3ReactProvider } from '@web3-react/core'
 import { ConnectorEvent, ConnectorUpdate } from '@web3-react/types'
 import React, { PureComponent } from 'react'
-import TagManager from 'react-gtm-module'
 import Intercom from 'react-intercom'
 import Modal from 'react-modal'
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
-import configProviders from '../config/providers.json'
 import { ProviderType } from '../domain/ProviderType'
 import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
@@ -24,18 +22,6 @@ const isMainnetProd =
   process.env.NODE_ENV &&
   process.env.NODE_ENV !== 'development' &&
   process.env.REACT_APP_ETH_NETWORK === 'mainnet'
-
-if (isMainnetProd) {
-  const tagManagerArgs = {
-    gtmId: configProviders.Google_TrackingID,
-    dataLayer: {
-      name: 'Home',
-      status: 'Intailized'
-    }
-  }
-  TagManager.initialize(tagManagerArgs)
-  // ReactGA.initialize(configProviders.Google_TrackingID);
-}
 
 interface IAppRouterState {
   isProviderMenuModalOpen: boolean
