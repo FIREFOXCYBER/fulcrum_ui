@@ -149,12 +149,12 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
       StakingProviderEvents.ProviderChanged,
       this.onProviderChanged
     )
-    window.removeEventListener('resize', this.didResize.bind(this))
+    window.removeEventListener('resize', this.didResize)
   }
 
   public componentDidMount(): void {
     this._isMounted = true
-    window.addEventListener('resize', this.didResize.bind(this))
+    window.addEventListener('resize', this.didResize)
     this.didResize()
     this.doNetworkConnect()
   }
