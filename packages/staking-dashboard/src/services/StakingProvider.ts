@@ -2,6 +2,7 @@ import { Web3ProviderEngine } from '@0x/subproviders'
 import { BigNumber } from '@0x/utils'
 import { TransactionReceipt, Web3Wrapper } from '@0x/web3-wrapper'
 import { AbstractConnector } from '@web3-react/abstract-connector'
+import { ConnectorUpdate } from '@web3-react/types'
 import { EventEmitter } from 'events'
 import { Asset } from '../domain/Asset'
 import { AssetsDictionary } from '../domain/AssetsDictionary'
@@ -16,6 +17,7 @@ import { RequestTask } from '../domain/RequestTask'
 import { StakingRequest } from '../domain/StakingRequest'
 import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
 import { ContractsSource } from './ContractsSource'
+import { ProviderChangedEvent } from './events/ProviderChangedEvent'
 import { StakingProviderEvents } from './events/StakingProviderEvents'
 
 const isMainnetProd =
@@ -119,11 +121,31 @@ export class StakingProvider extends EventEmitter {
     localStorage.setItem(item, val)
   }
 
-  public async setWeb3Provider(connector: AbstractConnector, account?: string) {
+  public setWeb3Provider = async (connector: AbstractConnector, account?: string) => {
+    if (this.isLoading) {
+      return
+    }
     this.unsupportedNetwork = false
+    this.isLoading = true
+    this.emit(StakingProviderEvents.ProviderIsChanging)
     await Web3ConnectionFactory.setWalletProvider(connector, account)
     const providerType = await ProviderTypeDictionary.getProviderTypeByConnector(connector)
     await this.setWeb3ProviderFinalize(providerType)
+    this.isLoading = false
+    this.emit(
+      StakingProviderEvents.ProviderChanged,
+      new ProviderChangedEvent(this.providerType, this.web3Wrapper)
+    )
+  }
+
+  public onConnectorUpdated = async (update: ConnectorUpdate) => {
+    this.emit(StakingProviderEvents.ProviderIsChanging)
+    await Web3ConnectionFactory.updateConnector(update)
+    await this.setWeb3ProviderFinalize(this.providerType)
+    this.emit(
+      StakingProviderEvents.ProviderChanged,
+      new ProviderChangedEvent(this.providerType, this.web3Wrapper)
+    )
   }
 
   public async setReadonlyWeb3Provider() {
@@ -238,6 +260,16 @@ export class StakingProvider extends EventEmitter {
     this.isLoading = false
   }
 
+  public deactivate = async () => {
+    this.isLoading = true
+    this.emit(StakingProviderEvents.ProviderIsChanging)
+    await this.setReadonlyWeb3Provider()
+    this.isLoading = false
+    this.emit(
+      StakingProviderEvents.ProviderChanged,
+      new ProviderChangedEvent(this.providerType, this.web3Wrapper)
+    )
+  }
 
   public getUserBalances = async (networkName?: string) => {
     if ([ProviderType.None, ProviderType.Alchemy].includes(this.providerType)) {
