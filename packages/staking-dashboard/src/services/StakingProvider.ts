@@ -4,6 +4,7 @@ import { TransactionReceipt, Web3Wrapper } from '@0x/web3-wrapper'
 import { AbstractConnector } from '@web3-react/abstract-connector'
 import { ConnectorUpdate } from '@web3-react/types'
 import { EventEmitter } from 'events'
+import appConfig from '../config/appConfig'
 import { Asset } from '../domain/Asset'
 import { AssetsDictionary } from '../domain/AssetsDictionary'
 import { BecomeRepresentativeRequest } from '../domain/BecomeRepresentativeRequest'
@@ -19,30 +20,6 @@ import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
 import { ContractsSource } from './ContractsSource'
 import { ProviderChangedEvent } from './events/ProviderChangedEvent'
 import { StakingProviderEvents } from './events/StakingProviderEvents'
-
-const isMainnetProd =
-  process.env.NODE_ENV &&
-  process.env.NODE_ENV !== 'development' &&
-  process.env.REACT_APP_ETH_NETWORK === 'mainnet'
-
-const INITIAL_NETWORK = process.env.REACT_APP_ETH_NETWORK
-
-const getNetworkIdByString = (networkName: string | undefined) => {
-  switch (networkName) {
-    case 'mainnet':
-      return 1
-    case 'ropsten':
-      return 3
-    case 'rinkeby':
-      return 4
-    case 'kovan':
-      return 42
-    default:
-      return 0
-  }
-}
-
-const initialNetworkId = getNetworkIdByString(INITIAL_NETWORK)
 
 export class StakingProvider extends EventEmitter {
   public static Instance: StakingProvider
@@ -75,9 +52,9 @@ export class StakingProvider extends EventEmitter {
     const storedProvider: any = this.getLocalstorageItem('providerType')
     const providerType: ProviderType | null = (storedProvider as ProviderType) || null
 
-    this.web3ProviderSettings = this.getWeb3ProviderSettings(initialNetworkId)
+    this.web3ProviderSettings = this.getWeb3ProviderSettings(appConfig.appNetworkId)
     if (!providerType || providerType === ProviderType.None) {
-      this.web3ProviderSettings = this.getWeb3ProviderSettings(initialNetworkId)
+      this.web3ProviderSettings = this.getWeb3ProviderSettings(appConfig.appNetworkId)
       Web3ConnectionFactory.setReadonlyProvider()
         .then(() => {
           const web3Wrapper = Web3ConnectionFactory.currentWeb3Wrapper
@@ -162,7 +139,7 @@ export class StakingProvider extends EventEmitter {
     const networkId = Web3ConnectionFactory.networkId
     this.accounts = Web3ConnectionFactory.userAccount ? [Web3ConnectionFactory.userAccount] : []
 
-    if (this.web3Wrapper && networkId !== initialNetworkId) {
+    if (this.web3Wrapper && networkId !== appConfig.appNetworkId) {
       // TODO: inform the user they are on the wrong network. Make it provider specific (MetaMask, etc)
       this.unsupportedNetwork = true
       canWrite = false // revert back to read-only
@@ -933,7 +910,7 @@ export class StakingProvider extends EventEmitter {
     );
 
     return swapRates[0][0];*/
-    return this.getSwapRate(asset, isMainnetProd ? Asset.DAI : Asset.USDC)
+    return this.getSwapRate(asset, appConfig.isMainnetProd ? Asset.DAI : Asset.USDC)
   }
 
   public async getSwapRate(

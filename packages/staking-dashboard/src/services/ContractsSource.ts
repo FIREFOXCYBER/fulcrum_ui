@@ -1,23 +1,13 @@
-import { BigNumber } from '@0x/utils'
 import _ from 'lodash'
+import appConfig from '../config/appConfig'
 import { BZRXStakingInterimContract } from '../contracts/BZRXStakingInterim'
 import { convertContract } from '../contracts/convert'
 import { erc20Contract } from '../contracts/erc20'
 import { iBZxContract } from '../contracts/iBZxContract'
+import { oracleContract } from '../contracts/oracle'
 import { traderCompensationContract } from '../contracts/traderCompensation'
 
-import { oracleContract } from '../contracts/oracle'
-
-const ethNetwork = process.env.REACT_APP_ETH_NETWORK
-
-interface ITokenContractInfo {
-  token: string
-  asset: string
-  name: string
-  symbol: string
-  index: BigNumber
-  version?: number
-}
+const { appNetwork } = appConfig
 
 export class ContractsSource {
   private readonly provider: any
@@ -45,16 +35,16 @@ export class ContractsSource {
     if (ContractsSource.isInit) {
       return
     }
-    ContractsSource.convertJson = await import(`./../assets/artifacts/${ethNetwork}/convert.json`)
-    ContractsSource.erc20Json = await import(`./../assets/artifacts/${ethNetwork}/erc20.json`)
+    ContractsSource.convertJson = await import(`./../assets/artifacts/${appNetwork}/convert.json`)
+    ContractsSource.erc20Json = await import(`./../assets/artifacts/${appNetwork}/erc20.json`)
     ContractsSource.BZRXStakingInterimJson = await import(
-      `./../assets/artifacts/${ethNetwork}/BZRXStakingInterim.json`
+      `./../assets/artifacts/${appNetwork}/BZRXStakingInterim.json`
     )
     ContractsSource.traderCompensation = await import(
-      `./../assets/artifacts/${ethNetwork}/traderCompensation.json`
+      `./../assets/artifacts/${appNetwork}/traderCompensation.json`
     )
-    ContractsSource.iBZxJson = await import(`./../assets/artifacts/${ethNetwork}/iBZx.json`)
-    ContractsSource.oracleJson = await import(`./../assets/artifacts/${ethNetwork}/oracle.json`)
+    ContractsSource.iBZxJson = await import(`./../assets/artifacts/${appNetwork}/iBZx.json`)
+    ContractsSource.oracleJson = await import(`./../assets/artifacts/${appNetwork}/oracle.json`)
 
     ContractsSource.isInit = true
   }

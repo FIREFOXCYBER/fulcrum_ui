@@ -3,6 +3,7 @@ import React, { ChangeEvent, PureComponent } from 'react'
 import { ReactComponent as TokenBpt } from '../assets/images/token-bpt.svg'
 import { ReactComponent as TokenBzrx } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as TokenVBzrx } from '../assets/images/token-vbzrx.svg'
+import appConfig from '../config/appConfig'
 
 interface IAddToBalanceProps {
   bzrxMax: BigNumber
@@ -22,8 +23,6 @@ interface IAddToBalanceState {
   bptInputInBaseUnits: BigNumber
 }
 
-const networkName = process.env.REACT_APP_ETH_NETWORK
-
 export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAddToBalanceState> {
   constructor(props: any, context?: any) {
     super(props, context)
@@ -38,7 +37,7 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
       bzrxInputInBaseUnits: props.bzrxMax.times(10 ** 18),
       vbzrxInputInBaseUnits: props.vbzrxMax.times(10 ** 18),
       bptInputInBaseUnits:
-        networkName === 'kovan'
+        appConfig.isKovan
           ? this.props.bptMax.times(10 ** 6)
           : this.props.bptMax.times(10 ** 18)
     }
@@ -244,10 +243,10 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
     const result = this.changeBalance(inputValue, this.props.bptMax)
     const bptInputInBaseUnits =
       maxInputValue && maxInputValue === result.inputBalance
-        ? networkName === 'kovan'
+        ? appConfig.isKovan
           ? new BigNumber(this.props.bptMax).times(10 ** 6)
           : new BigNumber(this.props.bptMax).times(10 ** 18)
-        : networkName === 'kovan'
+        : appConfig.isKovan
         ? new BigNumber(result.inputBalance).times(10 ** 6)
         : new BigNumber(result.inputBalance).times(10 ** 18)
     this.setState({
