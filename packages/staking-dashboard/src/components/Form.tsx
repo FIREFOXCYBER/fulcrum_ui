@@ -1,4 +1,3 @@
-import Box from '3box'
 import { BigNumber } from '@0x/utils'
 import React, { PureComponent } from 'react'
 import Modal from 'react-modal'
@@ -8,6 +7,7 @@ import Representative3 from '../assets/images/representative3.png'
 import { ReactComponent as BPTIcon } from '../assets/images/token-bpt.svg'
 import { ReactComponent as BzrxIcon } from '../assets/images/token-bzrx.svg'
 import { ReactComponent as VBzrxIcon } from '../assets/images/token-vbzrx.svg'
+import appConfig from '../config/appConfig'
 import { BecomeRepresentativeRequest } from '../domain/BecomeRepresentativeRequest'
 import { ClaimReabteRewardsRequest } from '../domain/ClaimReabteRewardsRequest'
 import { ClaimRequest } from '../domain/ClaimRequest'
@@ -16,6 +16,7 @@ import { IRep } from '../domain/IRep'
 import { RequestStatus } from '../domain/RequestStatus'
 import { RequestTask } from '../domain/RequestTask'
 import { StakingRequest } from '../domain/StakingRequest'
+import stakingApi from '../lib/stakingApi'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
 import stakingProvider from '../services/StakingProvider'
 import AddToBalance from './AddToBalance'
@@ -42,8 +43,6 @@ interface IFormState {
   rebateRewards: BigNumber
   isAnimationTx: boolean
 }
-
-const networkName = process.env.REACT_APP_ETH_NETWORK
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -72,27 +71,50 @@ export default class Form extends PureComponent<{}, IFormState> {
     }
 
     this._isMounted = false
-    stakingProvider.on(StakingProviderEvents.ProviderAvailable, this.onProviderAvailable)
-    stakingProvider.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
-    stakingProvider.on(StakingProviderEvents.AskToOpenProgressDlg, this.onAskToOpenProgressDlg)
-    stakingProvider.on(StakingProviderEvents.AskToCloseProgressDlg, this.onAskToCloseProgressDlg)
   }
 
   private isAlreadyRepresentative: boolean = false
 
   private _isMounted: boolean
 
-  private async derivedUpdate() {
-    let selectedRepAddress = ''
-    this.isAlreadyRepresentative = await stakingProvider.checkIsRep()
-
-    const userBalances = await stakingProvider.getUserBalances(networkName)
-
+  /**
+   * Utility to update local state easily taking async operations into account.
+   * - checks if the component is still mounted before calling setState
+   * - option to pass the state updates as an object or an async task
+   * @param task new state updates OR async op that returns a promise with the state updates
+   */
+  private async updateLocalState<T>(task: (() => Promise<T>) | object) {
     if (!this._isMounted) {
       return
     }
+    let stateUpdate: object
+    if (typeof task === 'function') {
+      stateUpdate = await task()
+      if (!this._isMounted) {
+        return
+      }
+    } else {
+      stateUpdate = task
+    }
+    this.setState(stateUpdate)
+    return stateUpdate
+  }
 
-    this.setState({ ...this.state, ...userBalances })
+  private async derivedUpdate() {
+    this.isAlreadyRepresentative = await stakingProvider.checkIsRep()
+
+    await this.updateLocalState(() => stakingProvider.getUserBalances(appConfig.appNetwork))
+
+    await this.updateLocalState(async () => {
+      const [userEarnings, rebateRewards] = await Promise.all([
+        stakingProvider.getUserEarnings(),
+        stakingProvider.getRebateRewards()
+      ])
+      return {
+        userEarnings,
+        rebateRewards: rebateRewards.div(10 ** 18)
+      }
+    })
 
     const repsList = ((await stakingProvider.getRepresentatives()) as IRep[]).map((rep, i) => {
       rep.index = i
@@ -101,29 +123,15 @@ export default class Form extends PureComponent<{}, IFormState> {
       return rep
     })
 
-    let topRepsList = repsList.sort((a: any, b: any) => b.BZRX.minus(a.BZRX).toNumber()).slice(0, 3)
-    this._isMounted &&
-      this.setState({
-        ...this.state,
-        repsList,
-        topRepsList
-      })
+    let topRepsList = repsList.sort((a, b) => b.BZRX.minus(a.BZRX).toNumber()).slice(0, 3)
 
-    const userEarnings = await stakingProvider.getUserEarnings()
-    const rebateRewards = (await stakingProvider.getRebateRewards()).div(10 ** 18)
-    this._isMounted &&
-      this.setState({
-        ...this.state,
-        userEarnings,
-        rebateRewards
-      })
+    await this.updateLocalState({ repsList, topRepsList })
 
-    topRepsList = await Promise.all(topRepsList.map((rep, index) => this.getRepInfo(rep, index)))
-    this._isMounted &&
-      this.setState({
-        ...this.state,
-        topRepsList
-      })
+    topRepsList = await Promise.all(
+      topRepsList.map((rep, index) => stakingApi.getRepInfo(rep, index))
+    )
+
+    await this.updateLocalState({ topRepsList })
 
     const delegateAddress = await stakingProvider.getDelegateAddress()
     const delegate = topRepsList.find(
@@ -132,13 +140,10 @@ export default class Form extends PureComponent<{}, IFormState> {
     if (delegate && !topRepsList.includes(delegate)) {
       topRepsList.push(delegate)
     }
-    selectedRepAddress = delegateAddress
-    this._isMounted &&
-      this.setState({
-        ...this.state,
-        delegateAddress,
-        selectedRepAddress
-      })
+
+    if (this._isMounted) {
+      this.setState({ delegateAddress, selectedRepAddress: delegateAddress })
+    }
   }
 
   private onProviderAvailable = async () => {
@@ -151,47 +156,51 @@ export default class Form extends PureComponent<{}, IFormState> {
 
   public componentDidMount(): void {
     this._isMounted = true
-    this.derivedUpdate().catch((err) => console.error(err))
+    stakingProvider.on(StakingProviderEvents.ProviderAvailable, this.onProviderAvailable)
+    stakingProvider.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
+    stakingProvider.on(StakingProviderEvents.AskToOpenProgressDlg, this.onAskToOpenProgressDlg)
+    stakingProvider.on(StakingProviderEvents.AskToCloseProgressDlg, this.onAskToCloseProgressDlg)
   }
 
   public componentWillUnmount(): void {
     this._isMounted = false
-
     stakingProvider.off(StakingProviderEvents.ProviderAvailable, this.onProviderAvailable)
     stakingProvider.off(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
     stakingProvider.off(StakingProviderEvents.AskToOpenProgressDlg, this.onAskToOpenProgressDlg)
     stakingProvider.off(StakingProviderEvents.AskToCloseProgressDlg, this.onAskToCloseProgressDlg)
   }
 
-  public onBzrxV1ToV2ConvertClick = async () => {
-    await stakingProvider.onRequestConfirmed(
-      new ConvertRequest(this.state.bzrxV1Balance.times(10 ** 18))
-    )
-    // await StakingProvider.convertBzrxV1ToV2(this.state.bzrxV1Balance.times(10 ** 18));
-    // await this.derivedUpdate();
+  public onBzrxV1ToV2ConvertClick = () => {
+    stakingProvider
+      .onRequestConfirmed(new ConvertRequest(this.state.bzrxV1Balance.times(10 ** 18)))
+      .catch((err) => {
+        console.error(err)
+      })
   }
 
-  // public onOptinClick = async () => {
-  //   await StakingProvider.doOptin();
-  //   await this.derivedUpdate();
-  // }
-
-  public onClaimClick = async () => {
-    await stakingProvider.onRequestConfirmed(new ClaimRequest())
+  public onClaimClick = () => {
+    stakingProvider.onRequestConfirmed(new ClaimRequest()).catch((err) => {
+      console.error(err)
+    })
   }
 
-  public onClaimRebateRewardsClick = async () => {
-    // await StakingProvider.doClaimReabteRewards();
-    // await this.derivedUpdate();
-    await stakingProvider.onRequestConfirmed(new ClaimReabteRewardsRequest())
+  public onClaimRebateRewardsClick = () => {
+    stakingProvider.onRequestConfirmed(new ClaimReabteRewardsRequest()).catch((err) => {
+      console.error(err)
+    })
   }
 
-  public onBecomeRepresentativeClick = async () => {
-    await stakingProvider.onRequestConfirmed(new BecomeRepresentativeRequest())
+  public onBecomeRepresentativeClick = () => {
+    stakingProvider.onRequestConfirmed(new BecomeRepresentativeRequest()).catch((err) => {
+      console.error(err)
+    })
   }
 
-  public onStakeClick = async (bzrx: BigNumber, vbzrx: BigNumber, bpt: BigNumber) => {
-    if (this.state.selectedRepAddress === '') return
+  public onStakeClick = (bzrx: BigNumber, vbzrx: BigNumber, bpt: BigNumber) => {
+    if (this.state.selectedRepAddress === '') {
+      return
+    }
+
     const bzrxAmount = bzrx.gt(this.state.bzrxBalance.times(10 ** 18))
       ? this.state.bzrxBalance.times(10 ** 18)
       : bzrx
@@ -199,7 +208,7 @@ export default class Form extends PureComponent<{}, IFormState> {
       ? this.state.vBzrxBalance.times(10 ** 18)
       : vbzrx
     let bptAmount
-    if (networkName === 'kovan') {
+    if (appConfig.isKovan) {
       bptAmount = bpt.gt(this.state.bptBalance.times(10 ** 6))
         ? this.state.bptBalance.times(10 ** 6)
         : bpt
@@ -209,9 +218,13 @@ export default class Form extends PureComponent<{}, IFormState> {
         : bpt
     }
 
-    await stakingProvider.onRequestConfirmed(
-      new StakingRequest(bzrxAmount, vbzrxAmount, bptAmount, this.state.selectedRepAddress)
-    )
+    stakingProvider
+      .onRequestConfirmed(
+        new StakingRequest(bzrxAmount, vbzrxAmount, bptAmount, this.state.selectedRepAddress)
+      )
+      .catch((err) => {
+        console.error(err)
+      })
   }
 
   public setSelectedRepAddressClick = (e: React.MouseEvent<HTMLElement>) => {
@@ -219,7 +232,7 @@ export default class Form extends PureComponent<{}, IFormState> {
     const liElement = e.currentTarget
     const address = liElement.dataset.address
     if (!address) return
-    this.setState({ ...this.state, selectedRepAddress: address })
+    this.setState({ selectedRepAddress: address })
   }
 
   private getShortHash = (hash: string, count: number) => {
@@ -227,13 +240,13 @@ export default class Form extends PureComponent<{}, IFormState> {
   }
 
   private openFindRepresentative = async () => {
-    this._isMounted &&
-      !this.state.isFindRepresentativeOpen &&
-      this.setState({ ...this.state, isFindRepresentativeOpen: true })
-    !this.state.isRepsLoaded &&
-      (await this.getRepsInfo(this.state.repsList).then((repsList) =>
-        this.setState({ ...this.state, repsList, isRepsLoaded: true })
-      ))
+    if (this._isMounted && !this.state.isFindRepresentativeOpen) {
+      this.setState({ isFindRepresentativeOpen: true })
+    }
+    if (!this.state.isRepsLoaded) {
+      const repsList = await stakingApi.getRepsInfo(this.state.repsList)
+      this.setState({ repsList, isRepsLoaded: true })
+    }
   }
 
   private onAddRep = (wallet: string) => {
@@ -245,40 +258,17 @@ export default class Form extends PureComponent<{}, IFormState> {
       this.state.repsList.find((item) => item.wallet === wallet)!
     )
 
-    this._isMounted &&
-      this.setState({ ...this.state, topRepsList, isFindRepresentativeOpen: false })
+    this._isMounted && this.setState({ topRepsList, isFindRepresentativeOpen: false })
   }
 
-  private onRequestClose = async () => {
+  private onRequestClose = () => {
     if (this._isMounted) {
-      this.setState({
-        ...this.state,
-        isFindRepresentativeOpen: false
-      })
-    }
-  }
-
-  private getRepInfo = async (item: IRep, index: number): Promise<IRep> => {
-    let name
-    let imageSrc
-    const profile = await Box.getProfile(item.wallet)
-    name = profile.name ? profile.name : item.name
-    imageSrc = profile.image
-      ? `https://ipfs.infura.io/ipfs/${profile.image[0].contentUrl['/']}`
-      : item.imageSrc
-
-    return {
-      ...item,
-      name,
-      imageSrc,
-      index
+      this.setState({ isFindRepresentativeOpen: false })
     }
   }
 
   private onAskToOpenProgressDlg = () => {
-    this.setState({
-      isAnimationTx: true
-    })
+    this.setState({ isAnimationTx: true })
   }
 
   private onAskToCloseProgressDlg = async (task: RequestTask) => {
@@ -289,38 +279,12 @@ export default class Form extends PureComponent<{}, IFormState> {
     ) {
       if (task.status === RequestStatus.DONE) await this.derivedUpdate()
       window.setTimeout(() => {
-        this.setState({
-          isAnimationTx: false
-        })
+        this.setState({ isAnimationTx: false })
       }, 5000)
       return
     }
 
-    this.setState({
-      isAnimationTx: false
-    })
-  }
-  private getRepsInfo = async (repsBaseInfoList: IRep[]): Promise<IRep[]> => {
-    // TODO: track CORS issue https://github.com/3box/3box-js/issues/649
-    const profiles = await (
-      await fetch('https://cors-anywhere.herokuapp.com/https://ipfs.3box.io/profileList', {
-        body: JSON.stringify({ addressList: repsBaseInfoList.map((e) => e.wallet), didList: [] }),
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-    ).json()
-    const repsList = repsBaseInfoList.map((repBaseInfo) => {
-      repBaseInfo.name =
-        profiles[repBaseInfo.wallet] && profiles[repBaseInfo.wallet].name
-          ? profiles[repBaseInfo.wallet].name
-          : this.getShortHash(repBaseInfo.wallet, 4)
-      repBaseInfo.imageSrc =
-        profiles[repBaseInfo.wallet] && profiles[repBaseInfo.wallet].image
-          ? `https://ipfs.infura.io/ipfs/${profiles[repBaseInfo.wallet].image[0].contentUrl['/']}`
-          : repBaseInfo.imageSrc
-      return repBaseInfo
-    })
-    return repsList
+    this.setState({ isAnimationTx: false })
   }
 
   public render() {
@@ -351,7 +315,8 @@ export default class Form extends PureComponent<{}, IFormState> {
           isOpen={this.state.isFindRepresentativeOpen}
           onRequestClose={this.onRequestClose}
           className="modal-content-div"
-          overlayClassName="modal-overlay-div">
+          overlayClassName="modal-overlay-div"
+          ariaHideApp={false}>
           <FindRepresentative
             onFindRepresentativeClose={this.onRequestClose}
             onAddRepresentative={this.onAddRep}
