@@ -1,5 +1,4 @@
 import { Web3ProviderEngine } from '@0x/subproviders'
-import { Web3Wrapper } from '@0x/web3-wrapper'
 import { Web3ReactProvider } from '@web3-react/core'
 import { ConnectorEvent } from '@web3-react/types'
 import React, { PureComponent } from 'react'
@@ -14,13 +13,11 @@ import DashboardPage from '../pages/DashboardPage'
 import { ProviderChangedEvent } from '../services/events/ProviderChangedEvent'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
 import stakingProvider from '../services/StakingProvider'
-import LocationListener from './LocationListener'
 import ProviderMenu from './ProviderMenu'
 
 interface IAppRouterState {
   isProviderMenuModalOpen: boolean
   isLoading: boolean
-  web3: Web3Wrapper | null
   isMobileMedia: boolean
 }
 
@@ -32,7 +29,6 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
     this.state = {
       isProviderMenuModalOpen: false,
       isLoading: false,
-      web3: stakingProvider.web3Wrapper,
       isMobileMedia: false
     }
     stakingProvider.on(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
@@ -43,7 +39,7 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
     this.setState({ isLoading: true, isProviderMenuModalOpen: false })
   }
 
-  public onRequestClose = async () => {
+  public closeProviderMenu = async () => {
     if (this._isMounted) {
       this.setState({ isProviderMenuModalOpen: false })
     }
@@ -60,6 +56,10 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
 
   public componentWillUnmount(): void {
     this._isMounted = false
+    stakingProvider.removeListener(
+      StakingProviderEvents.ProviderIsChanging,
+      this.onProviderChanging
+    )
     stakingProvider.removeListener(StakingProviderEvents.ProviderChanged, this.onProviderChanged)
     window.removeEventListener('resize', this.didResize)
   }
@@ -87,7 +87,7 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
   }
 
   public onProviderChanged = (event: ProviderChangedEvent) => {
-    this.setState({ isLoading: false, isProviderMenuModalOpen: false, web3: event.web3 })
+    this.setState({ isLoading: false, isProviderMenuModalOpen: false })
   }
 
   public render() {
@@ -95,7 +95,7 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
       <Web3ReactProvider getLibrary={this.getLibrary}>
         <Modal
           isOpen={this.state.isProviderMenuModalOpen}
-          onRequestClose={this.onRequestClose}
+          onRequestClose={this.closeProviderMenu}
           className="modal-content-div"
           overlayClassName="modal-overlay-div"
           ariaHideApp={false}>
@@ -104,25 +104,23 @@ export default class AppRouter extends PureComponent<any, IAppRouterState> {
             isMobileMedia={this.state.isMobileMedia}
             onSelect={stakingProvider.setWeb3Provider}
             onDeactivate={stakingProvider.deactivate}
-            onProviderMenuClose={this.onRequestClose}
+            onProviderMenuClose={this.closeProviderMenu}
           />
         </Modal>
 
         {appConfig.isMainnetProd ? <Intercom appID="dfk4n5ut" /> : null}
         <Router>
-          <LocationListener doNetworkConnect={this.doNetworkConnect}>
-            <Switch>
-              <Route exact={true} path="/">
-                <DashboardPage
-                  isMobileMedia={this.state.isMobileMedia}
-                  doNetworkConnect={this.doNetworkConnect}
-                />
-              </Route>
-              {/* <Route path="/transactions">
-                <TransactionsPage isMobileMedia={this.state.isMobileMedia} doNetworkConnect={this.doNetworkConnect} />
-              </Route> */}
-            </Switch>
-          </LocationListener>
+          <Switch>
+            <Route exact={true} path="/">
+              <DashboardPage
+                isMobileMedia={this.state.isMobileMedia}
+                doNetworkConnect={this.doNetworkConnect}
+              />
+            </Route>
+            {/* <Route path="/transactions">
+              <TransactionsPage isMobileMedia={this.state.isMobileMedia} doNetworkConnect={this.doNetworkConnect} />
+            </Route> */}
+          </Switch>
         </Router>
         <Footer />
       </Web3ReactProvider>
