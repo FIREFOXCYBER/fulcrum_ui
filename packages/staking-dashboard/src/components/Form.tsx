@@ -23,6 +23,7 @@ import AddToBalance from './AddToBalance'
 import AnimationTx from './AnimationTx'
 import FindRepresentative from './FindRepresentative'
 import FormAssetBalance from './FormAssetBalance'
+import FormRewards from './FormRewards'
 
 interface IFormState {
   bzrxV1Balance: BigNumber
@@ -385,46 +386,11 @@ export default class Form extends PureComponent<{}, IFormState> {
                   </div>
                 </div>
 
-                <div className="calculator-row rewards-container">
-                  <div className="reward-item">
-                    <div className="row-header">Incentive rewards balance:</div>
-                    <div className="row-body">
-                      <div className="reward-content">
-                        <a
-                          href={`${etherscanURL}token/0xB72B31907C1C95F3650b64b2469e08EdACeE5e8F`}
-                          target="_blank"
-                          rel="noopener noreferrer">
-                          <span className="icon">
-                            <VBzrxIcon />
-                          </span>
-                        </a>
-                        <span className="value" title={this.state.rebateRewards.toFixed(18)}>
-                          {this.state.rebateRewards.toFixed(4)}
-                        </span>
-                      </div>
-                      <button
-                        className="button"
-                        disabled={!this.state.rebateRewards.gt(0)}
-                        onClick={this.onClaimRebateRewardsClick}>
-                        Claim Rewards
-                      </button>
-                    </div>
-                  </div>
-                  <div className="reward-item">
-                    <div className="row-header">Staking rewards balance:</div>
-                    <div className="row-body">
-                      <div className="reward-content">
-                        <span className="currency">$</span>
-                        <span className="value" title={this.state.userEarnings.toFixed(18)}>
-                          {this.state.userEarnings.toFixed(2)}
-                        </span>
-                      </div>
-                      <button className="button" disabled={true}>
-                        Claim Rewards
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <FormRewards
+                  rebateRewards={this.state.rebateRewards}
+                  userEarnings={this.state.userEarnings}
+                  etherscanURL={etherscanURL}
+                  onClaimRebateRewardsClick={this.onClaimRebateRewardsClick}/>
 
                 {this.state.bzrxV1Balance.gt(0) && (
                   <div className="convert-button">
@@ -451,44 +417,27 @@ export default class Form extends PureComponent<{}, IFormState> {
                     </button>
                   </div>
                 )}
-                {/*{this.state.canOptin &&
-            <div className="convert-button">
-              <button className="button button-full-width" onClick={this.onOptinClick}>
-                Opt-in to compensation program
-                  <span className="notice">The program is open to anyone negatively impacted by the protocol pause on Feb-18-2020 04:21:52 AM +UTC</span>
-              </button>
-            </div>
-            }*/}
-                {/*<div className="group-buttons">
-              <button title="Coming soon" className="button" disabled={true}>Stake</button>
-              <button title="Coming soon" className="button" disabled={true}>Unstake</button>
-              <button title="Coming soon" className="button" disabled={true}>Claim Rewards</button>
-              <button title="Coming soon" className="button" disabled={true}>Explore Reward Pool</button>
-              <p className="notice">Coming soon</p>
-            </div>*/}
-                {/*{this.state.bzrxBalance.gt(0) || this.state.vBzrxBalance.gt(0) || this.state.bptBalance.gt(0) &&*/}
-                <React.Fragment>
-                  <div className="calculator-row">
-                    <div className="row-header">Please select representative:</div>
-                    <ul
-                      className={`group-buttons ${
-                        this.state.delegateAddress.toLowerCase() !== ZERO_ADDRESS
-                          ? 'selected-delegate'
-                          : ''
-                      }`}>
-                      {topRepsLi}
-                    </ul>
-                  </div>
-                  {this.state.selectedRepAddress !== '' && (
-                    <AddToBalance
-                      bzrxMax={this.state.bzrxBalance}
-                      vbzrxMax={this.state.vBzrxBalance}
-                      bptMax={this.state.bptBalance}
-                      stake={this.onStakeClick}
-                    />
-                  )}
-                </React.Fragment>
-                {/*}*/}
+
+                <div className="calculator-row">
+                  <div className="row-header">Please select representative:</div>
+                  <ul
+                    className={`group-buttons ${
+                      this.state.delegateAddress.toLowerCase() !== ZERO_ADDRESS
+                        ? 'selected-delegate'
+                        : ''
+                    }`}>
+                    {topRepsLi}
+                  </ul>
+                </div>
+                {this.state.selectedRepAddress !== '' && (
+                  <AddToBalance
+                    bzrxMax={this.state.bzrxBalance}
+                    vbzrxMax={this.state.vBzrxBalance}
+                    bptMax={this.state.bptBalance}
+                    stake={this.onStakeClick}
+                  />
+                )}
+
                 <div className="calculator-row">
                   <div className="group-buttons">
                     <button className="button" onClick={this.openFindRepresentative}>
