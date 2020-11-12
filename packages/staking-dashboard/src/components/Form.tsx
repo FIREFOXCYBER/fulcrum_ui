@@ -24,6 +24,7 @@ import AnimationTx from './AnimationTx'
 import FindRepresentative from './FindRepresentative'
 import FormAssetBalance from './FormAssetBalance'
 import FormRewards from './FormRewards'
+import TopRepList from './TopRepList'
 
 interface IFormState {
   bzrxV1Balance: BigNumber
@@ -294,23 +295,6 @@ export default class Form extends PureComponent<{}, IFormState> {
       ? stakingProvider.web3ProviderSettings.etherscanURL
       : ''
 
-    const topRepsLi = this.state.topRepsList.map((e) => {
-      return (
-        <li
-          key={e.wallet}
-          className={`button button-representative ${
-            e.wallet.toLowerCase() === this.state.selectedRepAddress.toLowerCase()
-              ? 'active'
-              : 'no-active'
-          }`}
-          onClick={this.setSelectedRepAddressClick}
-          data-address={e.wallet}>
-          <img className="photo" src={e.imageSrc} alt={`Representative ${e.index}`} />
-          <span className="name">{e.name}</span>
-        </li>
-      )
-    })
-
     return (
       <React.Fragment>
         <Modal
@@ -418,17 +402,13 @@ export default class Form extends PureComponent<{}, IFormState> {
                   </div>
                 )}
 
-                <div className="calculator-row">
-                  <div className="row-header">Please select representative:</div>
-                  <ul
-                    className={`group-buttons ${
-                      this.state.delegateAddress.toLowerCase() !== ZERO_ADDRESS
-                        ? 'selected-delegate'
-                        : ''
-                    }`}>
-                    {topRepsLi}
-                  </ul>
-                </div>
+                <TopRepList
+                  topRepsList={this.state.topRepsList}
+                  delegateAddress={this.state.delegateAddress}
+                  selectedRepAddress={this.state.selectedRepAddress}
+                  setSelectedRepAddressClick={this.setSelectedRepAddressClick}
+                />
+
                 {this.state.selectedRepAddress !== '' && (
                   <AddToBalance
                     bzrxMax={this.state.bzrxBalance}
