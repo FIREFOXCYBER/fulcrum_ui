@@ -306,7 +306,7 @@ export default class Form extends PureComponent<{}, IFormState> {
           <FindRepresentative
             onFindRepresentativeClose={this.onRequestClose}
             onAddRepresentative={this.onAddRep}
-            representative={this.state.repsList}
+            repsList={this.state.repsList}
           />
         </Modal>
         <div className="container">

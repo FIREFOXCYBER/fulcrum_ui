@@ -23,10 +23,7 @@ export function FindRepresentativeItem(props: IFindRepresentativeItemProps) {
   const { representative } = props
   const bzrxAmount = representative.BZRX.div(10 ** 18)
   const vbzrxAmount = representative.vBZRX.div(10 ** 18)
-  // TODO: remove networkName
-  const bptAmount = appConfig.isKovan
-    ? representative.LPToken.div(10 ** 6)
-    : representative.LPToken.div(10 ** 18)
+  const bptAmount = representative.LPToken.div(appConfig.bptDecimals)
 
   return (
     <li className="item-find-representative" onClick={() => props.onRepClick()}>
@@ -48,29 +45,6 @@ export function FindRepresentativeItem(props: IFindRepresentativeItemProps) {
         <BPTIcon />
         <span>{formatAmount(bptAmount)}</span>
       </div>
-      {/*
-      {representative.BZRX.gt(0) ?
-        <div className="token" title={bzrxAmount.toFixed(18)}>
-          <BzrxIcon />
-          <span>{bzrxAmount.toFixed(2)}</span>
-        </div>
-        : <div className="token"></div>
-      }
-      {representative.vBZRX.gt(0) ?
-        <div className="token" title={vbzrxAmount.toFixed(18)}>
-          <VBzrxIcon />
-          <span>{vbzrxAmount.toFixed(2)}</span>
-        </div>
-        : <div className="token"></div>
-      }
-      {representative.LPToken.gt(0) ?
-        <div className="token" title={bptAmount.toFixed(18)}>
-          <BPTIcon />
-          <span>{bptAmount.toFixed(2)}</span>
-        </div>
-        : <div className="token"></div>
-      }
-      */}
     </li>
   )
 }
