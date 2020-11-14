@@ -2,7 +2,7 @@ import { Web3ProviderEngine } from '@0x/subproviders'
 import { BigNumber } from '@0x/utils'
 import { TransactionReceipt, Web3Wrapper } from '@0x/web3-wrapper'
 import { AbstractConnector } from '@web3-react/abstract-connector'
-import { ConnectorUpdate } from '@web3-react/types'
+import { ConnectorEvent, ConnectorUpdate } from '@web3-react/types'
 import { EventEmitter } from 'events'
 import appConfig from '../config/appConfig'
 import { Asset } from '../domain/Asset'
@@ -113,6 +113,15 @@ export class StakingProvider extends EventEmitter {
       StakingProviderEvents.ProviderChanged,
       new ProviderChangedEvent(this.providerType, this.web3Wrapper)
     )
+  }
+
+  public getLibrary = async (provider: any, connector: any): Promise<Web3ProviderEngine> => {
+    // handle connectors events (i.e. network changed)
+    await this.setWeb3Provider(connector)
+    if (!connector.listeners(ConnectorEvent.Update).includes(this.onConnectorUpdated)) {
+      connector.on(ConnectorEvent.Update, this.onConnectorUpdated)
+    }
+    return Web3ConnectionFactory.currentWeb3Engine
   }
 
   public onConnectorUpdated = async (update: ConnectorUpdate) => {
