@@ -1,5 +1,5 @@
 import { Web3ProviderEngine } from '@0x/subproviders'
-import { BigNumber } from '@0x/utils'
+import { addressUtils, BigNumber } from '@0x/utils'
 import { TransactionReceipt, Web3Wrapper } from '@0x/web3-wrapper'
 import { AbstractConnector } from '@web3-react/abstract-connector'
 import { ConnectorEvent, ConnectorUpdate } from '@web3-react/types'
@@ -17,9 +17,20 @@ import { ProviderTypeDictionary } from '../domain/ProviderTypeDictionary'
 import { RequestTask } from '../domain/RequestTask'
 import { StakingRequest } from '../domain/StakingRequest'
 import { Web3ConnectionFactory } from '../domain/Web3ConnectionFactory'
+import stakingUtils from '../lib/stakingUtils'
 import { ContractsSource } from './ContractsSource'
 import { ProviderChangedEvent } from './events/ProviderChangedEvent'
 import { StakingProviderEvents } from './events/StakingProviderEvents'
+
+interface IUserBalances {
+  bptBalance: BigNumber
+  bptStakingBalance: BigNumber
+  bzrxBalance: BigNumber
+  bzrxStakingBalance: BigNumber
+  bzrxV1Balance: BigNumber
+  vBzrxBalance: BigNumber
+  vBzrxStakingBalance: BigNumber
+}
 
 export class StakingProvider extends EventEmitter {
   public static Instance: StakingProvider
@@ -38,6 +49,15 @@ export class StakingProvider extends EventEmitter {
   public accounts: string[] = []
   public isLoading: boolean = false
   public unsupportedNetwork: boolean = false
+  public userBalances: IUserBalances = {
+    bzrxV1Balance: new BigNumber(0),
+    bzrxBalance: new BigNumber(0),
+    vBzrxBalance: new BigNumber(0),
+    bptBalance: new BigNumber(0),
+    bzrxStakingBalance: new BigNumber(0),
+    vBzrxStakingBalance: new BigNumber(0),
+    bptStakingBalance: new BigNumber(0)
+  }
   private requestTask: RequestTask | undefined
 
   public readonly UNLIMITED_ALLOWANCE_IN_BASE_UNITS = new BigNumber(2).pow(256).minus(1)
@@ -194,7 +214,7 @@ export class StakingProvider extends EventEmitter {
 
   public getUserBalances = async (networkName?: string) => {
     if ([ProviderType.None, ProviderType.Alchemy].includes(this.providerType)) {
-      return {
+      this.userBalances = {
         bzrxV1Balance: new BigNumber(0),
         bzrxBalance: new BigNumber(0),
         vBzrxBalance: new BigNumber(0),
@@ -204,7 +224,6 @@ export class StakingProvider extends EventEmitter {
         bptStakingBalance: new BigNumber(0)
       }
     }
-    const otherDivider = networkName === 'kovan' ? 10 ** 6 : 10 ** 18
     const [
       bzrxV1Balance,
       bzrxBalance,
@@ -222,15 +241,17 @@ export class StakingProvider extends EventEmitter {
       this.balanceOfByAsset(Asset.vBZRX),
       this.balanceOfByAsset(Asset.BPT)
     ])
-    return {
+    this.userBalances = {
       bzrxV1Balance: bzrxV1Balance.div(10 ** 18),
       bzrxBalance: bzrxBalance.div(10 ** 18),
       vBzrxBalance: vBzrxBalance.div(10 ** 18),
-      bptBalance: bptBalance.div(otherDivider),
+      bptBalance: bptBalance.div(appConfig.bptDecimals),
       bzrxStakingBalance: bzrxStakingBalance.div(10 ** 18),
       vBzrxStakingBalance: vBzrxStakingBalance.div(10 ** 18),
-      bptStakingBalance: bptStakingBalance.div(otherDivider)
+      bptStakingBalance: bptStakingBalance.div(appConfig.bptDecimals)
     }
+
+    return this.userBalances
   }
 
   public getWeb3ProviderSettings(networkId: number | null): IWeb3ProviderSettings {
@@ -995,6 +1016,37 @@ export class StakingProvider extends EventEmitter {
     request: StakingRequest | ConvertRequest | ClaimRequest | BecomeRepresentativeRequest
   ) => {
     return this.processRequestTask(new RequestTask(request))
+  }
+
+  /**
+   * Send a staking request.
+   * Amounts should be in decimal base.
+   * eg: if user wants to stake 10 BZRX then bzrx argument should be new BigNumber(10)
+   * @param tokensToStake amount of bzrx, vbzrx and bpt to stake
+   * @param repAddress representative address
+   */
+  public stakeTokens = async (
+    tokensToStake: { bzrx: BigNumber; vbzrx: BigNumber; bpt: BigNumber },
+    repAddress: string
+  ) => {
+    const userBalances = {
+      bzrx: this.userBalances.bzrxBalance,
+      vbzrx: this.userBalances.vBzrxBalance,
+      bpt: this.userBalances.bptBalance
+    }
+
+    if (!stakingUtils.verifyStake(userBalances, tokensToStake)) {
+      throw new Error('Staking amounts are invalid. Maybe trying to stake more than possible.')
+    }
+
+    if (!addressUtils.isAddress(repAddress)) {
+      throw new Error('Invalid representative address')
+    }
+
+    const bzrx = tokensToStake.bzrx.times(10 ** 18)
+    const vbzrx = tokensToStake.vbzrx.times(10 ** 18)
+    const bpt = tokensToStake.bpt.times(appConfig.bptDecimals)
+    return this.onRequestConfirmed(new StakingRequest(bzrx, vbzrx, bpt, repAddress))
   }
 
   public processRequestTask = async (task: RequestTask) => {

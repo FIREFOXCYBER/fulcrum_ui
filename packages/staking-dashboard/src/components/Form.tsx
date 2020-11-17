@@ -15,7 +15,6 @@ import { ConvertRequest } from '../domain/ConvertRequest'
 import { IRep } from '../domain/IRep'
 import { RequestStatus } from '../domain/RequestStatus'
 import { RequestTask } from '../domain/RequestTask'
-import { StakingRequest } from '../domain/StakingRequest'
 import stakingApi from '../lib/stakingApi'
 import { StakingProviderEvents } from '../services/events/StakingProviderEvents'
 import stakingProvider from '../services/StakingProvider'
@@ -200,31 +199,8 @@ export default class Form extends PureComponent<{}, IFormState> {
   }
 
   public onStakeClick = (bzrx: BigNumber, vbzrx: BigNumber, bpt: BigNumber) => {
-    if (this.state.selectedRepAddress === '') {
-      return
-    }
-
-    const bzrxAmount = bzrx.gt(this.state.bzrxBalance.times(10 ** 18))
-      ? this.state.bzrxBalance.times(10 ** 18)
-      : bzrx
-    const vbzrxAmount = vbzrx.gt(this.state.vBzrxBalance.times(10 ** 18))
-      ? this.state.vBzrxBalance.times(10 ** 18)
-      : vbzrx
-    let bptAmount
-    if (appConfig.isKovan) {
-      bptAmount = bpt.gt(this.state.bptBalance.times(10 ** 6))
-        ? this.state.bptBalance.times(10 ** 6)
-        : bpt
-    } else {
-      bptAmount = bpt.gt(this.state.bptBalance.times(10 ** 18))
-        ? this.state.bptBalance.times(10 ** 18)
-        : bpt
-    }
-
     stakingProvider
-      .onRequestConfirmed(
-        new StakingRequest(bzrxAmount, vbzrxAmount, bptAmount, this.state.selectedRepAddress)
-      )
+      .stakeTokens({ bzrx, vbzrx, bpt }, this.state.selectedRepAddress)
       .catch((err) => {
         console.error(err)
       })
@@ -327,19 +303,22 @@ export default class Form extends PureComponent<{}, IFormState> {
                         }`}
                         tokenLogo={<BzrxIcon />}
                         balance={this.state.bzrxBalance}
-                        name="BZRX"/>
+                        name="BZRX"
+                      />
 
                       <FormAssetBalance
                         link={`${etherscanURL}token/0xB72B31907C1C95F3650b64b2469e08EdACeE5e8F`}
                         tokenLogo={<VBzrxIcon />}
                         balance={this.state.vBzrxBalance}
-                        name="vBZRX"/>
+                        name="vBZRX"
+                      />
 
                       <FormAssetBalance
                         link={`${etherscanURL}token/0xe26A220a341EAca116bDa64cF9D5638A935ae629`}
                         tokenLogo={<BPTIcon />}
                         balance={this.state.bptBalance}
-                        name="vBZRX"/>
+                        name="vBZRX"
+                      />
                     </div>
                     <div className="balance-item">
                       <div className="row-header">Staking Balance:</div>
@@ -348,19 +327,22 @@ export default class Form extends PureComponent<{}, IFormState> {
                         link={`${etherscanURL}token/0x56d811088235F11C8920698a204A5010a788f4b3`}
                         tokenLogo={<BzrxIcon />}
                         balance={this.state.bzrxStakingBalance}
-                        name="BZRX"/>
+                        name="BZRX"
+                      />
 
                       <FormAssetBalance
                         link={`${etherscanURL}token/0xB72B31907C1C95F3650b64b2469e08EdACeE5e8F`}
                         tokenLogo={<VBzrxIcon />}
                         balance={this.state.vBzrxStakingBalance}
-                        name="vBZRX"/>
+                        name="vBZRX"
+                      />
 
                       <FormAssetBalance
                         link={`${etherscanURL}token/0xe26A220a341EAca116bDa64cF9D5638A935ae629`}
                         tokenLogo={<BPTIcon />}
                         balance={this.state.bptStakingBalance}
-                        name="BPT"/>
+                        name="BPT"
+                      />
                     </div>
                     <p className="notice">
                       The staking dashboard in its current form tracks BZRX in your wallet or
@@ -374,7 +356,8 @@ export default class Form extends PureComponent<{}, IFormState> {
                   rebateRewards={this.state.rebateRewards}
                   userEarnings={this.state.userEarnings}
                   etherscanURL={etherscanURL}
-                  onClaimRebateRewardsClick={this.onClaimRebateRewardsClick}/>
+                  onClaimRebateRewardsClick={this.onClaimRebateRewardsClick}
+                />
 
                 {this.state.bzrxV1Balance.gt(0) && (
                   <div className="convert-button">

@@ -1,12 +1,13 @@
 import { BigNumber } from '@0x/utils'
 import React, { ChangeEvent, PureComponent } from 'react'
-import { ReactComponent as TokenBpt } from '../assets/images/token-bpt.svg'
-import { ReactComponent as TokenBzrx } from '../assets/images/token-bzrx.svg'
-import { ReactComponent as TokenVBzrx } from '../assets/images/token-vbzrx.svg'
-import appConfig from '../config/appConfig'
+import stakingUtils from '../lib/stakingUtils'
 import InputStake from './InputStake'
 
+/**
+ * Balances (Max) are BigNumbers already divided by the token decimals
+ */
 interface IAddToBalanceProps {
+  [x: string]: any
   bzrxMax: BigNumber
   vbzrxMax: BigNumber
   bptMax: BigNumber
@@ -14,15 +15,10 @@ interface IAddToBalanceProps {
 }
 
 interface IAddToBalanceState {
-  bzrxBalance: BigNumber
-  vBzrxBalance: BigNumber
-  bptBalance: BigNumber
-  inputBzrxBalance: string
-  inputVBzrxBalance: string
-  inputBptBalance: string
-  bzrxInputInBaseUnits: BigNumber
-  vbzrxInputInBaseUnits: BigNumber
-  bptInputInBaseUnits: BigNumber
+  [x: string]: any
+  bzrxInput: string
+  vbzrxInput: string
+  bptInput: string
 }
 
 export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAddToBalanceState> {
@@ -30,17 +26,9 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
     super(props, context)
 
     this.state = {
-      bzrxBalance: props.bzrxMax,
-      vBzrxBalance: props.vbzrxMax,
-      bptBalance: props.bptMax,
-      inputBzrxBalance: props.bzrxMax.toFixed(2),
-      inputVBzrxBalance: props.vbzrxMax.toFixed(2),
-      inputBptBalance: props.bptMax.toFixed(2),
-      bzrxInputInBaseUnits: props.bzrxMax.times(10 ** 18),
-      vbzrxInputInBaseUnits: props.vbzrxMax.times(10 ** 18),
-      bptInputInBaseUnits: appConfig.isKovan
-        ? this.props.bptMax.times(10 ** 6)
-        : this.props.bptMax.times(10 ** 18)
+      bzrxInput: props.bzrxMax.toFixed(2, 1),
+      vbzrxInput: props.vbzrxMax.toFixed(2, 1),
+      bptInput: props.bptMax.toFixed(2, 1)
     }
   }
 
@@ -51,14 +39,30 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
       this.props.bptMax !== prevProps.bptMax
     ) {
       this.setState({
-        bzrxBalance: this.props.bzrxMax,
-        vBzrxBalance: this.props.vbzrxMax,
-        bptBalance: this.props.bptMax,
-        inputBzrxBalance: this.props.bzrxMax.toFixed(2),
-        inputVBzrxBalance: this.props.vbzrxMax.toFixed(2),
-        inputBptBalance: this.props.bptMax.toFixed(2)
+        bzrxInput: this.props.bzrxMax.toFixed(2, 1),
+        vbzrxInput: this.props.vbzrxMax.toFixed(2, 1),
+        bptInput: this.props.bptMax.toFixed(2, 1)
       })
     }
+  }
+
+  /**
+   * Returns all input amounts as big numbers and in base unit (* 10^18)
+   */
+  get inputsAsBigNumbers() {
+    return {
+      bzrxInput: new BigNumber(this.state.bzrxInput),
+      vbzrxInput: new BigNumber(this.state.vbzrxInput),
+      bptInput: new BigNumber(this.state.bptInput)
+    }
+  }
+
+  get canStake() {
+    const { bzrxInput, vbzrxInput, bptInput } = this.inputsAsBigNumbers
+    const { bzrxMax, vbzrxMax, bptMax } = this.props
+    const userBalances = {bzrx: bzrxMax, vbzrx: vbzrxMax, bpt: bptMax}
+    const tokensToStake = {bzrx: bzrxInput, vbzrx: vbzrxInput, bpt: bptInput}
+    return stakingUtils.verifyStake(userBalances, tokensToStake)
   }
 
   public render() {
@@ -68,32 +72,29 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
           <label>Add to staking balance</label>
           {this.props.bzrxMax.gt(0) && (
             <InputStake
-              currentBalance={this.state.bzrxBalance}
+              id="bzrx"
               label="BZRX"
               max={this.props.bzrxMax}
-              onChange={this.changeBzrxBalance}
-              tokenLogo={<TokenBzrx className="token-logo" />}
-              value={this.state.inputBzrxBalance}
+              onChange={this.changeTokenBalance}
+              value={this.state.bzrxInput}
             />
           )}
           {this.props.vbzrxMax.gt(0) && (
             <InputStake
-              currentBalance={this.state.vBzrxBalance}
+              id="vbzrx"
               label="vBZRX"
               max={this.props.vbzrxMax}
-              onChange={this.changeVBzrxBalance}
-              tokenLogo={<TokenVBzrx className="token-logo" />}
-              value={this.state.inputVBzrxBalance}
+              onChange={this.changeTokenBalance}
+              value={this.state.vbzrxInput}
             />
           )}
           {this.props.bptMax.gt(0) && (
             <InputStake
-              currentBalance={this.state.bptBalance}
+              id="bpt"
               label="BPT"
               max={this.props.bptMax}
-              onChange={this.changeBptBalance}
-              tokenLogo={<TokenBpt className="token-logo" />}
-              value={this.state.inputBptBalance}
+              onChange={this.changeTokenBalance}
+              value={this.state.bptInput}
             />
           )}
 
@@ -101,14 +102,10 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
             <button
               title="Stake"
               className="button full-button blue"
-              disabled={
-                !this.state.bptBalance && !this.state.vBzrxBalance && !this.state.bzrxBalance
-              }
+              disabled={!this.canStake}
               onClick={this.stake}>
               Stake
             </button>
-            {/*<button title="Stake" className="button half-button blue" disabled={(!this.state.bptBalance && !this.state.vBzrxBalance && !this.state.bzrxBalance)}>Stake</button>
-                          <button title="Unstake" className="button half-button red" disabled={(!this.state.bptBalance && !this.state.vBzrxBalance && !this.state.bzrxBalance)}>Unstake</button>*/}
           </div>
         </div>
       </React.Fragment>
@@ -116,85 +113,31 @@ export default class AddToBalance extends PureComponent<IAddToBalanceProps, IAdd
   }
 
   private stake = () => {
-    this.props.stake(
-      this.state.bzrxInputInBaseUnits,
-      this.state.vbzrxInputInBaseUnits,
-      this.state.bptInputInBaseUnits
-    )
-  }
-
-  private changeBzrxBalance = (e: ChangeEvent<HTMLInputElement>) => {
-    const maxInputValue = parseFloat(e.currentTarget.getAttribute('max')!).toFixed(2)
-    const inputValue = e.currentTarget.value
-    const result = this.changeBalance(inputValue, this.props.bzrxMax)
-    const bzrxInputInBaseUnits =
-      maxInputValue && maxInputValue === result.inputBalance
-        ? new BigNumber(this.props.bzrxMax).times(10 ** 18)
-        : new BigNumber(result.inputBalance).times(10 ** 18)
-    this.setState({
-      bzrxBalance: result.balance,
-      inputBzrxBalance: result.inputBalance,
-      bzrxInputInBaseUnits
-    })
-  }
-
-  private changeVBzrxBalance = (e: ChangeEvent<HTMLInputElement>) => {
-    const maxInputValue = parseFloat(e.currentTarget.getAttribute('max')!).toFixed(2)
-    const inputValue = e.currentTarget.value
-    const result = this.changeBalance(inputValue, this.props.vbzrxMax)
-    const vbzrxInputInBaseUnits =
-      maxInputValue && maxInputValue === result.inputBalance
-        ? new BigNumber(this.props.vbzrxMax).times(10 ** 18)
-        : new BigNumber(result.inputBalance).times(10 ** 18)
-    this.setState({
-      vBzrxBalance: result.balance,
-      inputVBzrxBalance: result.inputBalance,
-      vbzrxInputInBaseUnits
-    })
-  }
-
-  private changeBptBalance = (e: ChangeEvent<HTMLInputElement>) => {
-    const maxInputValue = parseFloat(e.currentTarget.getAttribute('max')!).toFixed(2)
-    const inputValue = e.currentTarget.value
-    const result = this.changeBalance(inputValue, this.props.bptMax)
-    const bptInputInBaseUnits =
-      maxInputValue && maxInputValue === result.inputBalance
-        ? appConfig.isKovan
-          ? new BigNumber(this.props.bptMax).times(10 ** 6)
-          : new BigNumber(this.props.bptMax).times(10 ** 18)
-        : appConfig.isKovan
-        ? new BigNumber(result.inputBalance).times(10 ** 6)
-        : new BigNumber(result.inputBalance).times(10 ** 18)
-    this.setState({
-      bptBalance: result.balance,
-      inputBptBalance: result.inputBalance,
-      bptInputInBaseUnits
-    })
-  }
-
-  private changeBalance = (balanceText: string, walletBalance: BigNumber) => {
-    const balance = new BigNumber(balanceText)
-    if (balance.gt(walletBalance)) {
-      return {
-        balance: walletBalance,
-        inputBalance: walletBalance.toFixed(2, 1)
-      }
-    }
-    if (balance.lt(0) || !balanceText) {
-      return {
-        balance: new BigNumber(0),
-        inputBalance: '0'
-      }
-    }
-
-    const inputBalance = this.formatPrecision(balanceText)
-
-    return { balance: new BigNumber(inputBalance), inputBalance }
+    const { bzrxInput, vbzrxInput, bptInput } = this.inputsAsBigNumbers
+    this.props.stake(bzrxInput, vbzrxInput, bptInput)
   }
 
   private formatPrecision = (output: string) => {
-    if (output.match(/^(\d+\.{1}0?)$/)) return output
-
+    if (output.match(/^(\d+\.{1}0?)$/)) {
+      return output
+    }
     return Number(parseFloat(output).toFixed(2)).toPrecision()
+  }
+
+  private changeTokenBalance = (event: ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = event.currentTarget
+    const walletBalance = this.props[`${id}Max`] as BigNumber
+    const valueBN = new BigNumber(value)
+    let newInputValue = value
+
+    if (valueBN.gt(walletBalance)) {
+      newInputValue = walletBalance.toFixed(2, 1)
+    } else if (valueBN.lt(0) || !value) {
+      newInputValue = '0'
+    } else {
+      newInputValue = this.formatPrecision(value)
+    }
+
+    this.setState({ [`${id}Input`]: newInputValue })
   }
 }
