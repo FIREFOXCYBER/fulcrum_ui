@@ -554,6 +554,12 @@ export default class Fulcrum {
       swapRates[iTokens.map((x) => x.name).indexOf('bzrx')]
     ).dividedBy(10 ** 18)
     const monthlyReward = new BigNumber(10300000).times(bzrxUsdPrice)
+    const [vbzrxLockedAmount, vbzrxTotalSupply] = await Promise.all([
+      this.getErc20BalanceOfUser('0xB72B31907C1C95F3650b64b2469e08EdACeE5e8F', '0xD8Ee69652E4e4838f2531732a46d1f7F584F0b7f'),
+      this.getErc20TotalSupply('0xB72B31907C1C95F3650b64b2469e08EdACeE5e8F')
+    ])
+    usdTotalLockedAll = vbzrxLockedAmount.times(bzrxUsdPrice)
+    usdSupplyAll = vbzrxTotalSupply.times(bzrxUsdPrice)
 
     if (reserveData && reserveData.totalAssetSupply.length > 0) {
       await Promise.all(
@@ -681,6 +687,18 @@ export default class Fulcrum {
     const tokenContract = new this.web3.eth.Contract(erc20Json.abi, addressErc20)
     if (tokenContract) {
       result = new BigNumber(await tokenContract.methods.balanceOf(account).call())
+    }
+    return result
+  }
+
+  /**
+   * @param {string} addressErc20
+   */
+  async getErc20TotalSupply(addressErc20) {
+    let result = new BigNumber(0)
+    const tokenContract = new this.web3.eth.Contract(erc20Json.abi, addressErc20)
+    if (tokenContract) {
+      result = new BigNumber(await tokenContract.methods.totalSupply().call())
     }
     return result
   }
